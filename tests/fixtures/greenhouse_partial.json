@@ -1,0 +1,9 @@
+{
+  "jobs": [
+    {"id": 201, "title": "Offre valide sans description"},
+    {"title": "Offre sans identifiant"},
+    null,
+    {"id": 202, "content": ["type invalide"]}
+  ],
+  "meta": {"total": 5}
+}

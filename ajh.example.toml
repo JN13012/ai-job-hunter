@@ -2,3 +2,14 @@
 # Chemin relatif au dossier de ce fichier, ou chemin absolu.
 # Sous Windows, preferer 'C:\Users\nom\ajh-data' ou "C:/Users/nom/ajh-data".
 data_dir = ".ajh"
+
+[greenhouse]
+timeout_seconds = 15
+request_interval_seconds = 1
+
+# Board reel : https://job-boards.greenhouse.io/cloudflare
+# Page employeur : https://www.cloudflare.com/careers/jobs/
+# Verifier le token depuis le lien Greenhouse officiel, jamais le deviner.
+[[greenhouse.boards]]
+company = "Cloudflare"
+board_token = "cloudflare"

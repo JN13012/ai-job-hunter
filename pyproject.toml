@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Recherche et suivi de candidatures : script first, AI only when necessary."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["httpx>=0.27,<1"]
 
 [project.scripts]
 ajh = "ai_job_hunter.cli:main"

@@ -1,0 +1,18 @@
+{
+  "jobs": [
+    {
+      "id": 101,
+      "internal_job_id": 9001,
+      "title": "Alternance ingénierie IA",
+      "updated_at": "2026-11-09T10:00:00+01:00",
+      "location": {"name": "Paris, France (hybride)"},
+      "absolute_url": "https://careers.example.test/jobs/101?gh_jid=101",
+      "content": "&lt;p&gt;Python &amp; SQL&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Analyse de données&lt;/li&gt;&lt;li&gt;Tests automatisés&lt;/li&gt;&lt;/ul&gt;",
+      "departments": [{"id": 7, "name": "Engineering"}],
+      "metadata": null,
+      "unknown_future_field": {"preserve": true}
+    },
+    {"id": 102, "internal_job_id": null, "location": null}
+  ],
+  "meta": {"total": 2}
+}
