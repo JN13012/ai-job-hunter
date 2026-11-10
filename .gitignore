@@ -1,0 +1,34 @@
+# Python et outils locaux
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
+build/
+dist/
+
+# Configuration privee, donnees candidat et secrets
+ajh.toml
+.ajh/
+.env
+.env.*
+*.pem
+*.key
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*
+.aws/
+
+# Editeurs et systemes
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+[paths]
+# Chemin relatif au dossier de ce fichier, ou chemin absolu.
+# Sous Windows, preferer 'C:\Users\nom\ajh-data' ou "C:/Users/nom/ajh-data".
+data_dir = ".ajh"
