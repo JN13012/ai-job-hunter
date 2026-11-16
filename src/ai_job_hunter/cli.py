@@ -10,8 +10,8 @@ import sqlite3
 
 import httpx
 
-from ai_job_hunter.collection import collect_greenhouse
-from ai_job_hunter.config import ConfigError, load_config
+from ai_job_hunter.collection import collect_source
+from ai_job_hunter.config import ConfigError, SOURCES, load_config
 from ai_job_hunter.storage import JobStore
 
 
@@ -52,17 +52,19 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
-        if args.command == "collect" and not config.greenhouse.boards:
-            print("[FAIL] Aucun board Greenhouse configuré dans [[greenhouse.boards]].")
-            return 1
+        if args.command == "collect":
+            settings = getattr(config, args.source)
+            if not settings.boards:
+                print(f"[FAIL] Aucun board configuré dans [[{args.source}.boards]].")
+                return 1
         with JobStore(config.database_path) as store:
             if args.command == "collect":
                 with httpx.Client(
-                    timeout=config.greenhouse.timeout_seconds, follow_redirects=False,
+                    timeout=settings.timeout_seconds, follow_redirects=False,
                     headers={"User-Agent": "AI-Job-Hunter/0.1 (public Job Board API)",
                              "Accept": "application/json"},
                 ) as client:
-                    summary = collect_greenhouse(config.greenhouse, store, client)
+                    summary = collect_source(args.source, settings, store, client)
                 print(
                     f"Reçues : {summary.received} | Nouvelles : {summary.new} | "
                     f"Mises à jour : {summary.updated} | Inchangées : {summary.unchanged} | "
@@ -96,7 +98,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", title="commandes")
     commands.add_parser("doctor", help="vérifier Python, la configuration et les chemins locaux")
     collect = commands.add_parser("collect", help="collecter les boards explicitement configurés")
-    collect.add_argument("--source", choices=["greenhouse"], required=True)
+    collect.add_argument("--source", choices=SOURCES, required=True)
     jobs = commands.add_parser("jobs", help="consulter les offres locales")
     job_commands = jobs.add_subparsers(dest="jobs_command", required=True)
     listing = job_commands.add_parser("list", help="offres en JSON Lines (20 par défaut)")

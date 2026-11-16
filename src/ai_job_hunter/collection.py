@@ -8,6 +8,8 @@ import time
 import httpx
 
 from ai_job_hunter.collectors.greenhouse import CollectorError, fetch_board
+from ai_job_hunter.collectors.ats import fetch_ats
+from ai_job_hunter.ats_normalizer import normalize_ats
 from ai_job_hunter.config import GreenhouseConfig
 from ai_job_hunter.normalizer import normalize_greenhouse
 from ai_job_hunter.storage import JobStore
@@ -26,12 +28,19 @@ class CollectionSummary:
 def collect_greenhouse(
     settings: GreenhouseConfig, store: JobStore, client: httpx.Client,
 ) -> CollectionSummary:
+    return collect_source("greenhouse", settings, store, client)
+
+
+def collect_source(
+    source: str, settings: GreenhouseConfig, store: JobStore, client: httpx.Client,
+) -> CollectionSummary:
     summary = CollectionSummary()
     for index, board in enumerate(settings.boards):
         if index:
             time.sleep(settings.request_interval_seconds)
         try:
-            response = fetch_board(client, board)
+            response = (fetch_board(client, board) if source == "greenhouse"
+                        else fetch_ats(client, board, source, settings.request_interval_seconds))
         except CollectorError as exc:
             summary.errors.append(f"{board.board_token} : {exc}")
             if exc.rate_limited:
@@ -43,7 +52,9 @@ def collect_greenhouse(
         unique = {}
         for index_in_response, raw in enumerate(response.jobs):
             try:
-                job = normalize_greenhouse(raw, board, response.endpoint, observed_at)
+                job = (normalize_greenhouse(raw, board, response.endpoint, observed_at)
+                       if source == "greenhouse" else
+                       normalize_ats(raw, board, response.endpoint, observed_at, source))
                 if job.id in unique:
                     summary.duplicates += 1
                     if unique[job.id].content_hash != job.content_hash:
@@ -56,8 +67,12 @@ def collect_greenhouse(
             counts = store.upsert_jobs(unique.values())
         except (sqlite3.Error, ValueError) as exc:
             summary.errors.append(f"{board.board_token} : transaction annulée : {exc}")
+            if response.rate_limited:
+                break
             continue
         summary.new += counts.new
         summary.updated += counts.updated
         summary.unchanged += counts.unchanged
+        if response.rate_limited:
+            break
     return summary

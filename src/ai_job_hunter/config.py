@@ -24,14 +24,17 @@ class GreenhouseConfig:
     request_interval_seconds: float = 1.0
 
 
-def _greenhouse_config(raw: object) -> GreenhouseConfig:
+SOURCES = ("greenhouse", "lever", "lever_eu", "ashby", "smartrecruiters")
+
+
+def _greenhouse_config(raw: object, source: str = "greenhouse") -> GreenhouseConfig:
     if not isinstance(raw, dict) or raw.keys() - {
         "boards", "timeout_seconds", "request_interval_seconds"
     }:
-        raise ConfigError("Configuration [greenhouse] invalide ou option inconnue.")
+        raise ConfigError(f"Configuration [{source}] invalide ou option inconnue.")
     boards = raw.get("boards", [])
     if not isinstance(boards, list) or len(boards) > 10:
-        raise ConfigError("greenhouse.boards doit contenir au maximum 10 boards.")
+        raise ConfigError(f"{source}.boards doit contenir au maximum 10 boards.")
     parsed = []
     tokens = set()
     for board in boards:
@@ -54,7 +57,7 @@ def _greenhouse_config(raw: object) -> GreenhouseConfig:
         value = raw.get(key, default)
         if (isinstance(value, bool) or not isinstance(value, (int, float))
                 or not minimum <= value <= maximum or not math.isfinite(value)):
-            raise ConfigError(f"greenhouse.{key} doit être entre {minimum} et {maximum}.")
+            raise ConfigError(f"{source}.{key} doit être entre {minimum} et {maximum}.")
         values[key] = float(value)
     return GreenhouseConfig(boards=tuple(parsed), **values)
 
@@ -64,6 +67,10 @@ class Config:
     data_dir: Path
     source: Path | None
     greenhouse: GreenhouseConfig = GreenhouseConfig()
+    lever: GreenhouseConfig = GreenhouseConfig()
+    lever_eu: GreenhouseConfig = GreenhouseConfig()
+    ashby: GreenhouseConfig = GreenhouseConfig()
+    smartrecruiters: GreenhouseConfig = GreenhouseConfig()
 
     @property
     def database_path(self) -> Path:
@@ -86,8 +93,8 @@ def load_config(path: Path | None = None) -> Config:
                 raise ConfigError(f"Fichier introuvable : {source}") from None
             return Config(data_dir=source.parent / ".ajh", source=None)
 
-        if raw.keys() - {"paths", "greenhouse"}:
-            raise ConfigError("Sections inconnues : seules [paths] et [greenhouse] sont acceptées.")
+        if raw.keys() - {"paths", *SOURCES}:
+            raise ConfigError("Sections inconnues : paths et sources déclarées uniquement.")
         paths = raw.get("paths", {})
         if not isinstance(paths, dict):
             raise ConfigError("paths doit être une table TOML [paths].")
@@ -101,7 +108,7 @@ def load_config(path: Path | None = None) -> Config:
             data_dir = source.parent / data_dir
         return Config(
             data_dir=data_dir.resolve(), source=source,
-            greenhouse=_greenhouse_config(raw.get("greenhouse", {})),
+            **{name: _greenhouse_config(raw.get(name, {}), name) for name in SOURCES},
         )
     except (OSError, RuntimeError, ValueError) as exc:
         if isinstance(exc, ConfigError):

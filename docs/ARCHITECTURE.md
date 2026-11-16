@@ -67,5 +67,9 @@ scoring, persistance et suivi n'ont pas besoin de LLM. Les inconnues restent
 explicites ; aucune compétence ne doit être inventée. Les capacités seront
 ajoutées au fil des besoins, sans framework de plugins ni fichiers vides.
 
-M1 s'arrête à la collecte et à la persistance. Le profil, le scoring et les autres
-collecteurs feront l'objet de missions ultérieures ; aucun travail M2 n'est engagé.
+M1 s'arrête à la collecte et à la persistance. M2.1 étend les mêmes interfaces
+aux ATS Lever (global/EU), Ashby et SmartRecruiters, sans migration SQLite.
+La collecte, la normalisation, les transactions et le bilan restent partagés.
+Les détails SmartRecruiters sont limités aux 100 premiers résultats par board ;
+les autres restent partiels et une erreur de limite est signalée.
+Les profils et candidatures restent hors périmètre. Voir [ROADMAP.md](ROADMAP.md).

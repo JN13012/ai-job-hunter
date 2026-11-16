@@ -129,3 +129,29 @@ tout le lot concerné. Le JSON brut de chaque offre, l'endpoint et les dates
 d'observation sont conservés ; `updated_at` reste la valeur source, sans date
 inventée. Le HTML des descriptions est retiré avec décodage borné des entités,
 sans charger de ressource externe. Aucun dédoublonnage entre plateformes.
+
+
+## M2.1 — Sources ATS supplémentaires (à valider)
+
+Les commandes suivantes nécessitent une section TOML correspondante et des
+boards réels vérifiés sur les sites carrières des entreprises :
+
+~~~bash
+uv run ajh collect --source lever
+uv run ajh collect --source lever_eu
+uv run ajh collect --source ashby
+uv run ajh collect --source smartrecruiters
+~~~
+
+Chaque section reprend la structure de greenhouse : boards, timeout_seconds,
+request_interval_seconds. Les instances Lever EU et globale sont séparées
+pour éviter les collisions d'identifiants. Ashby ne collecte pas les offres
+explicitement non listées. SmartRecruiters récupère les listes publiques paginées
+et jusqu'à 100 détails par board ; le reste est conservé en état partiel.
+Ne pas interpréter les offres absentes comme fermées.
+
+Documentation :
+- https://github.com/lever/postings-api
+- https://developers.ashbyhq.com/docs/public-job-posting-api
+- https://developers.smartrecruiters.com/docs/posting-api
+- [Roadmap](docs/ROADMAP.md)

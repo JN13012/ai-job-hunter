@@ -13,3 +13,9 @@ request_interval_seconds = 1
 [[greenhouse.boards]]
 company = "Cloudflare"
 board_token = "cloudflare"
+
+# Autres ATS M2.1 : ajouter uniquement des tokens issus d'un site carrière officiel.
+# Même structure pour [lever], [lever_eu], [ashby], [smartrecruiters].
+# [[lever.boards]]
+# company = "Nom de l'entreprise"
+# board_token = "token-verifie"
