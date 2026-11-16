@@ -13,7 +13,7 @@ from ai_job_hunter.collectors.common import MAX_RESPONSE_BYTES
 
 def fetch_board(client: httpx.Client, board: GreenhouseBoard) -> BoardResponse:
     endpoint = f"https://boards-api.greenhouse.io/v1/boards/{board.board_token}/jobs?content=true"
-    payload = fetch_json(client, endpoint)
+    payload = fetch_json(client, endpoint, max_response_bytes=MAX_RESPONSE_BYTES)
     if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
         raise CollectorError("Réponse invalide : tableau jobs manquant.")
     jobs = payload["jobs"]

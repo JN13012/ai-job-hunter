@@ -24,7 +24,8 @@ class BoardResponse:
     rate_limited: bool = False
 
 
-def fetch_json(client: httpx.Client, endpoint: str) -> Any:
+def fetch_json(client: httpx.Client, endpoint: str, *, max_response_bytes: int | None = None) -> Any:
+    limit = MAX_RESPONSE_BYTES if max_response_bytes is None else max_response_bytes
     try:
         with client.stream("GET", endpoint) as response:
             if response.status_code != 200:
@@ -35,8 +36,8 @@ def fetch_json(client: httpx.Client, endpoint: str) -> Any:
             body = bytearray()
             for chunk in response.iter_bytes():
                 body.extend(chunk)
-                if len(body) > MAX_RESPONSE_BYTES:
-                    raise CollectorError("Réponse trop volumineuse (maximum 20 Mio).")
+                if len(body) > limit:
+                    raise CollectorError(f"Réponse trop volumineuse (maximum {limit} octets).")
         # JSON non fini (NaN/Infinity) n'est pas une donnée source valide.
         def reject_constant(value: str) -> None:
             raise ValueError(f"Constante JSON invalide : {value}")
