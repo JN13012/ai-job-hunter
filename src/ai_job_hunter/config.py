@@ -24,7 +24,8 @@ class GreenhouseConfig:
     request_interval_seconds: float = 1.0
 
 
-SOURCES = ("greenhouse", "lever", "lever_eu", "ashby", "smartrecruiters")
+BOARD_SOURCES = ("greenhouse", "lever", "lever_eu", "ashby", "smartrecruiters")
+SOURCES = (*BOARD_SOURCES, "lba")
 
 
 def _greenhouse_config(raw: object, source: str = "greenhouse") -> GreenhouseConfig:
@@ -63,6 +64,37 @@ def _greenhouse_config(raw: object, source: str = "greenhouse") -> GreenhouseCon
 
 
 @dataclass(frozen=True)
+class LBAConfig:
+    romes: tuple[str, ...] = ()
+    departements: tuple[str, ...] = ()
+    target_diploma_level: str | None = None
+    timeout_seconds: float = 20.0
+
+
+def _lba_config(raw: object) -> LBAConfig:
+    if not isinstance(raw, dict) or raw.keys() - {
+        "romes", "departements", "target_diploma_level", "timeout_seconds"
+    }:
+        raise ConfigError("Configuration [lba] invalide ou option inconnue.")
+    def codes(key: str, pattern: str, maximum: int) -> tuple[str, ...]:
+        values = raw.get(key, [])
+        if (not isinstance(values, list) or len(values) > maximum
+                or any(not isinstance(v, str) or not re.fullmatch(pattern, v) for v in values)
+                or len(set(values)) != len(values)):
+            raise ConfigError(f"lba.{key} : liste de codes uniques invalide.")
+        return tuple(values)
+    romes = codes("romes", r"[A-Z]\d{4}", 10)
+    departements = codes("departements", r"(?:\d{2}|2[AB]|97[1-6])", 10)
+    diploma = raw.get("target_diploma_level")
+    if diploma is not None and diploma not in ("3", "4", "5", "6", "7"):
+        raise ConfigError("lba.target_diploma_level doit être une chaîne de 3 à 7.")
+    timeout = raw.get("timeout_seconds", 20)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 1 <= timeout <= 60:
+        raise ConfigError("lba.timeout_seconds doit être entre 1 et 60.")
+    return LBAConfig(romes, departements, diploma, float(timeout))
+
+
+@dataclass(frozen=True)
 class Config:
     data_dir: Path
     source: Path | None
@@ -71,6 +103,7 @@ class Config:
     lever_eu: GreenhouseConfig = GreenhouseConfig()
     ashby: GreenhouseConfig = GreenhouseConfig()
     smartrecruiters: GreenhouseConfig = GreenhouseConfig()
+    lba: LBAConfig = LBAConfig()
 
     @property
     def database_path(self) -> Path:
@@ -108,7 +141,8 @@ def load_config(path: Path | None = None) -> Config:
             data_dir = source.parent / data_dir
         return Config(
             data_dir=data_dir.resolve(), source=source,
-            **{name: _greenhouse_config(raw.get(name, {}), name) for name in SOURCES},
+            lba=_lba_config(raw.get("lba", {})),
+            **{name: _greenhouse_config(raw.get(name, {}), name) for name in BOARD_SOURCES},
         )
     except (OSError, RuntimeError, ValueError) as exc:
         if isinstance(exc, ConfigError):

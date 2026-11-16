@@ -73,3 +73,14 @@ La collecte, la normalisation, les transactions et le bilan restent partagés.
 Les détails SmartRecruiters sont limités aux 100 premiers résultats par board ;
 les autres restent partiels et une erreur de limite est signalée.
 Les profils et candidatures restent hors périmètre. Voir [ROADMAP.md](ROADMAP.md).
+
+## M2.2 — La Bonne Alternance
+
+GET authentifié par clé d'environnement AJH_LBA_API_KEY vers l'API officielle.
+Le profil de recherche est explicitement configuré (ROME, départements et niveau
+facultatif). Une requête par collecte, pas de retry automatique. Les offres
+utilisent l'identité partenaire + identifiant partenaire ; les entreprises à
+potentiel utilisent une table additive lba_recruiters, sans confusion avec jobs.
+Les deux lots sont transactionnels séparément. Les avertissements de couverture
+ne signifient pas une panne. Les listes plafonnées ne sont pas exhaustives.
+La collecte réelle et l'exécution des tests restent à valider.

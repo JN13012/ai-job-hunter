@@ -9,7 +9,7 @@ en priorité, France et zones géographiques configurables.
 | M0 | Socle local Python, CLI, uv — réalisé |
 | M1 | Greenhouse, normalisation, SQLite — réalisé |
 | M2.1 | Lever (global / EU), Ashby, SmartRecruiters — collecte réelle validée ; détails SmartRecruiters partiels |
-| M2.2 | La Bonne Alternance : accès officiel, offres et entreprises à potentiel |
+| M2.2 | La Bonne Alternance : accès officiel, offres et entreprises à potentiel — implémentation à valider |
 | M2.3 | Catalogue d'entreprises, sites carrières autorisés, import d'alertes et de liens |
 | M3 | Filtres, scoring explicable, sélection, dédoublonnage intersources |
 | M4 | Identification d'entreprises cibles (SIRENE et sources autorisées) |

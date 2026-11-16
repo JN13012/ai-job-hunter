@@ -163,3 +163,29 @@ SmartRecruiters signale volontairement une collecte partielle des détails :
 100 détails récupérés au maximum, 1 996 offres restantes sans enrichissement.
 La réexécution réelle et la protection contre la perte de détails déjà acquis
 lors de collectes partielles restent à vérifier. Windows natif non vérifié.
+
+## M2.2 — La Bonne Alternance (à valider)
+
+Créer une clé de production depuis https://api.apprentissage.beta.gouv.fr/fr/explorer.
+La lecture est autorisée avec une clé valide, à usage non lucratif. La soumission
+nécessite une habilitation et n'est pas implémentée.
+
+Configurer [lba] dans ajh.toml (voir exemple), avec codes ROME et départements.
+La recherche est volontairement ciblée et plafonnée côté serveur ; ne pas la
+considérer comme exhaustive. La clé ne figure jamais dans le TOML ni dans Git.
+
+Sous Bash/WSL :
+
+~~~bash
+read -rs -p "Clé LBA : " AJH_LBA_API_KEY; echo
+export AJH_LBA_API_KEY
+uv run ajh collect --source lba
+uv run ajh jobs stats
+uv run ajh recruiters stats
+uv run ajh recruiters list --limit 5
+unset AJH_LBA_API_KEY
+~~~
+
+Les offres sont intégrées à jobs.sqlite3 ; les entreprises à potentiel sont dans
+une table lba_recruiters distincte. Pas de stockage explicite des téléphones ni
+recipient_id, pas de POST. Aucune disparition ne signifie une clôture.

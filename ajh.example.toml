@@ -19,3 +19,9 @@ board_token = "cloudflare"
 # [[lever.boards]]
 # company = "Nom de l'entreprise"
 # board_token = "token-verifie"
+
+# La Bonne Alternance (usage non lucratif, clé via AJH_LBA_API_KEY).
+# [lba]
+# romes = ["M1805"]
+# departements = ["13"]
+# target_diploma_level = "7" # facultatif, à omettre pour une recherche plus large

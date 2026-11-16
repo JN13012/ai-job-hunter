@@ -4,6 +4,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 import sys
+import os
 import tempfile
 import json
 import sqlite3
@@ -13,6 +14,7 @@ import httpx
 from ai_job_hunter.collection import collect_source
 from ai_job_hunter.config import ConfigError, SOURCES, load_config
 from ai_job_hunter.storage import JobStore
+from ai_job_hunter.lba import collect_lba, list_recruiters, count_recruiters
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -54,7 +56,15 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
         config = load_config(args.config)
         if args.command == "collect":
             settings = getattr(config, args.source)
-            if not settings.boards:
+            if args.source == "lba":
+                if not settings.romes or not settings.departements:
+                    print("[FAIL] Configurer lba.romes et lba.departements.")
+                    return 1
+                key = os.environ.get("AJH_LBA_API_KEY", "").strip()
+                if not key or any(ch.isspace() for ch in key):
+                    print("[FAIL] Variable AJH_LBA_API_KEY absente ou invalide.")
+                    return 1
+            elif not settings.boards:
                 print(f"[FAIL] Aucun board configuré dans [[{args.source}.boards]].")
                 return 1
         with JobStore(config.database_path) as store:
@@ -64,7 +74,23 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
                     headers={"User-Agent": "AI-Job-Hunter/0.1 (public Job Board API)",
                              "Accept": "application/json"},
                 ) as client:
-                    summary = collect_source(args.source, settings, store, client)
+                    if args.source == "lba":
+                        result = collect_lba(settings, store, client, key)
+                    else:
+                        summary = collect_source(args.source, settings, store, client)
+                if args.source == "lba":
+                    for label, received, counts in (
+                        ("Offres", result.received_jobs, result.jobs),
+                        ("Entreprises à potentiel", result.received_recruiters, result.recruiters),
+                    ):
+                        print(f"{label} : {received} reçues | {counts.new} nouvelles | "
+                              f"{counts.updated} mises à jour | {counts.unchanged} inchangées")
+                    print(f"Doublons : {result.duplicates} | Erreurs : {len(result.errors)}")
+                    for warning in result.warnings:
+                        print(f"[WARN] {warning}")
+                    for error in result.errors:
+                        print(f"[FAIL] {error}")
+                    return 1 if result.errors else 0
                 print(
                     f"Reçues : {summary.received} | Nouvelles : {summary.new} | "
                     f"Mises à jour : {summary.updated} | Inchangées : {summary.unchanged} | "
@@ -73,6 +99,13 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
                 for error in summary.errors:
                     print(f"[FAIL] {error}")
                 return 1 if summary.errors else 0
+            if args.command == "recruiters":
+                if args.recruiters_command == "list":
+                    for row in list_recruiters(store, args.limit):
+                        print(json.dumps(dict(row), ensure_ascii=False))
+                else:
+                    print(json.dumps({"total": count_recruiters(store), "source": "lba"}))
+                return 0
             if args.jobs_command == "list":
                 # JSON Lines : valeurs null explicites, caractères de contrôle échappés.
                 for row in store.list_jobs(args.limit):
@@ -104,10 +137,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     listing = job_commands.add_parser("list", help="offres en JSON Lines (20 par défaut)")
     listing.add_argument("--limit", type=_positive_limit, default=20)
     job_commands.add_parser("stats", help="compter les offres par source et board")
+    recruiters = commands.add_parser("recruiters", help="entreprises LBA à potentiel, pas des offres")
+    recruiter_commands = recruiters.add_subparsers(dest="recruiters_command", required=True)
+    recruiter_list = recruiter_commands.add_parser("list", help="entreprises en JSON Lines")
+    recruiter_list.add_argument("--limit", type=_positive_limit, default=20)
+    recruiter_commands.add_parser("stats", help="compter les entreprises à potentiel")
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs"}:
+    if args.command in {"collect", "jobs", "recruiters"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
