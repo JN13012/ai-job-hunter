@@ -1,4 +1,4 @@
-# Architecture — M0 et M1
+# Architecture — M0 à M2.1
 
 Principe : **SCRIPT FIRST, AI ONLY WHEN NECESSARY.** Le traitement déterministe
 est le chemin par défaut ; un LLM sera une capacité optionnelle, appelée

@@ -131,7 +131,7 @@ inventée. Le HTML des descriptions est retiré avec décodage borné des entit�
 sans charger de ressource externe. Aucun dédoublonnage entre plateformes.
 
 
-## M2.1 — Sources ATS supplémentaires (à valider)
+## M2.1 — Sources ATS supplémentaires
 
 Les commandes suivantes nécessitent une section TOML correspondante et des
 boards réels vérifiés sur les sites carrières des entreprises :
@@ -155,3 +155,11 @@ Documentation :
 - https://developers.ashbyhq.com/docs/public-job-posting-api
 - https://developers.smartrecruiters.com/docs/posting-api
 - [Roadmap](docs/ROADMAP.md)
+
+Validation réelle M2.1 (16 novembre 2026, WSL Linux, Python 3.12.15) :
+127 tests réussis ; 3 025 offres enregistrées, aucun doublon signalé.
+Greenhouse 471, Lever 302, Lever EU 13, Ashby 143, SmartRecruiters 2 096.
+SmartRecruiters signale volontairement une collecte partielle des détails :
+100 détails récupérés au maximum, 1 996 offres restantes sans enrichissement.
+La réexécution réelle et la protection contre la perte de détails déjà acquis
+lors de collectes partielles restent à vérifier. Windows natif non vérifié.
