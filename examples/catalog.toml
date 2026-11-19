@@ -1,0 +1,42 @@
+# Boards réellement testés le 16 novembre 2026 (M2.1).
+# Les entrées manual sont des cibles de veille, jamais interrogées automatiquement.
+[[targets]]
+company = "Cloudflare"
+source = "greenhouse"
+career_url = "https://job-boards.greenhouse.io/cloudflare"
+board_token = "cloudflare"
+
+[[targets]]
+company = "Palantir"
+source = "lever"
+career_url = "https://jobs.lever.co/palantir"
+board_token = "palantir"
+
+[[targets]]
+company = "Diabolocom"
+source = "lever_eu"
+career_url = "https://jobs.eu.lever.co/diabolocom"
+board_token = "diabolocom"
+
+[[targets]]
+company = "Perplexity"
+source = "ashby"
+career_url = "https://jobs.ashbyhq.com/perplexity"
+board_token = "perplexity"
+
+[[targets]]
+company = "Sopra Steria"
+source = "smartrecruiters"
+career_url = "https://careers.smartrecruiters.com/SopraSteria1/soprasteria-fr"
+board_token = "SopraSteria1"
+
+# Pages alternance officielles vérifiées le 19 novembre 2026.
+[[targets]]
+company = "Thales"
+source = "manual"
+career_url = "https://careers.thalesgroup.com/fr/fr/futurs-talents-france"
+
+[[targets]]
+company = "Airbus"
+source = "manual"
+career_url = "https://www.airbus.com/fr/careers/students-and-graduates/apprentices/apprenticeships-in-france"

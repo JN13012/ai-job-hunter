@@ -84,3 +84,15 @@ potentiel utilisent une table additive lba_recruiters, sans confusion avec jobs.
 Les deux lots sont transactionnels séparément. Les avertissements de couverture
 ne signifient pas une panne. Les listes plafonnées ne sont pas exhaustives.
 La collecte réelle et l'exécution des tests restent à valider.
+
+
+## M2.3 — Catalogue et import local
+
+catalog.py valide les liens ATS et tokens déclarés, sélectionne les boards
+à collecter avec les connecteurs existants, sans requête de découverte.
+Les pages de carrière manuelles ne déclenchent aucun accès réseau.
+imports.py normalise les annonces JSON sélectionnées ou exportées avec
+autorisation, utilise JobStore et conserve leur provenance et disponibilité
+non vérifiée. Aucun shell, navigateur, email, scraping ou LLM.
+Le dédoublonnage intersources, l'import direct de messagerie et les nouveaux
+connecteurs spécifiques (non ATS) restent à développer. Validation locale requise.

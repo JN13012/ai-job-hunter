@@ -189,3 +189,30 @@ unset AJH_LBA_API_KEY
 Les offres sont intégrées à jobs.sqlite3 ; les entreprises à potentiel sont dans
 une table lba_recruiters distincte. Pas de stockage explicite des téléphones ni
 recipient_id, pas de POST. Aucune disparition ne signifie une clôture.
+
+
+## M2.3 — Catalogue et import local (à valider)
+
+~~~bash
+uv run ajh catalog --file examples/catalog.toml
+uv run ajh collect --source lever --catalog examples/catalog.toml
+uv run ajh import --file .ajh/mes-offres.json
+uv run ajh jobs stats
+~~~
+
+Le catalogue contient cinq boards testés en M2.1 et deux pages alternance
+officielles à consulter manuellement. Copier le fichier dans .ajh/ pour
+personnaliser les cibles. Les boards d'une source sont sélectionnés explicitement
+avec --catalog, en remplacement des boards TOML pour cette exécution seulement ;
+maximum dix par collecte. Les cibles manual ne déclenchent aucune requête.
+
+L'import accepte un tableau JSON, voir examples/import.example.json (fictif,
+ne pas importer en production). Renseigner source (linkedin, indeed, wttj,
+freework, career, other), url, company, title. location, description et
+application_url sont facultatifs. Les données doivent être saisies manuellement
+ou obtenues via un export autorisé. L'import ne télécharge pas les pages,
+ne lit pas la messagerie et n'envoie aucun dossier. L'URL de source est en
+provenance_json ; application_url n'est renseignée que si fournie explicitement.
+La disponibilité n'est pas vérifiée. Dédoublonnage par source et URL sans
+fragment, pas entre plateformes. Limites : 5 Mio et 1000 lignes par fichier.
+Ne stocker ni liens confidentiels, ni jetons de session, ni informations personnelles.

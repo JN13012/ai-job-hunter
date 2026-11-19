@@ -10,7 +10,7 @@ en priorité, France et zones géographiques configurables.
 | M1 | Greenhouse, normalisation, SQLite — réalisé |
 | M2.1 | Lever (global / EU), Ashby, SmartRecruiters — collecte réelle validée ; détails SmartRecruiters partiels |
 | M2.2 | La Bonne Alternance : accès officiel, offres et entreprises à potentiel — implémentation à valider |
-| M2.3 | Catalogue d'entreprises, sites carrières autorisés, import d'alertes et de liens |
+| M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres, scoring explicable, sélection, dédoublonnage intersources |
 | M4 | Identification d'entreprises cibles (SIRENE et sources autorisées) |
 | M5 | Contacts de recrutement professionnels publiés, provenance et minimisation |

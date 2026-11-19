@@ -1,0 +1,11 @@
+[
+  {
+    "source": "career",
+    "url": "https://example.test/jobs/42",
+    "company": "Entreprise fictive",
+    "title": "Alternance IA (exemple fictif)",
+    "location": "Marseille",
+    "description": "Exemple de données saisies manuellement.",
+    "application_url": "https://example.test/jobs/42/apply"
+  }
+]

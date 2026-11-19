@@ -1,6 +1,7 @@
 """Point d'entrée local et chaîne déterministe M1."""
 
 import argparse
+from dataclasses import asdict
 from collections.abc import Sequence
 from pathlib import Path
 import sys
@@ -15,6 +16,8 @@ from ai_job_hunter.collection import collect_source
 from ai_job_hunter.config import ConfigError, SOURCES, load_config
 from ai_job_hunter.storage import JobStore
 from ai_job_hunter.lba import collect_lba, list_recruiters, count_recruiters
+from ai_job_hunter.catalog import load_catalog, catalog_settings
+from ai_job_hunter.imports import import_jobs
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -54,8 +57,14 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "catalog":
+            for target in load_catalog(args.file):
+                print(json.dumps(asdict(target), ensure_ascii=False))
+            return 0
         if args.command == "collect":
             settings = getattr(config, args.source)
+            if args.catalog is not None:
+                settings = catalog_settings(load_catalog(args.catalog), args.source, settings)
             if args.source == "lba":
                 if not settings.romes or not settings.departements:
                     print("[FAIL] Configurer lba.romes et lba.departements.")
@@ -68,6 +77,15 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
                 print(f"[FAIL] Aucun board configuré dans [[{args.source}.boards]].")
                 return 1
         with JobStore(config.database_path) as store:
+            if args.command == "import":
+                result = import_jobs(args.file, store)
+                counts = result.counts
+                print(f"Reçues : {result.received} | Nouvelles : {counts.new} | "
+                      f"Mises à jour : {counts.updated} | Inchangées : {counts.unchanged} | "
+                      f"Doublons : {result.duplicates} | Erreurs : {len(result.errors)}")
+                for error in result.errors:
+                    print(f"[FAIL] {error}")
+                return 1 if result.errors else 0
             if args.command == "collect":
                 with httpx.Client(
                     timeout=settings.timeout_seconds, follow_redirects=False,
@@ -113,7 +131,7 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
             else:
                 rows = [dict(row) for row in store.stats()]
                 print(json.dumps({"total": sum(row["count"] for row in rows), "boards": rows}, ensure_ascii=False))
-    except (ConfigError, OSError, sqlite3.Error) as exc:
+    except (ValueError, OSError, sqlite3.Error) as exc:
         print(f"[FAIL] {exc}")
         return 1
     return 0
@@ -132,6 +150,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands.add_parser("doctor", help="vérifier Python, la configuration et les chemins locaux")
     collect = commands.add_parser("collect", help="collecter les boards explicitement configurés")
     collect.add_argument("--source", choices=SOURCES, required=True)
+    collect.add_argument("--catalog", type=Path, metavar="FICHIER", help="utiliser les boards du catalogue pour cette source")
+    catalog = commands.add_parser("catalog", help="consulter un catalogue local de sociétés")
+    catalog.add_argument("--file", type=Path, required=True)
+    importer = commands.add_parser("import", help="importer des annonces sélectionnées depuis un fichier JSON")
+    importer.add_argument("--file", type=Path, required=True)
     jobs = commands.add_parser("jobs", help="consulter les offres locales")
     job_commands = jobs.add_subparsers(dest="jobs_command", required=True)
     listing = job_commands.add_parser("list", help="offres en JSON Lines (20 par défaut)")
@@ -145,7 +168,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
