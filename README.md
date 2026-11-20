@@ -216,3 +216,33 @@ provenance_json ; application_url n'est renseignée que si fournie explicitement
 La disponibilité n'est pas vérifiée. Dédoublonnage par source et URL sans
 fragment, pas entre plateformes. Limites : 5 Mio et 1000 lignes par fichier.
 Ne stocker ni liens confidentiels, ni jetons de session, ni informations personnelles.
+
+
+## M3 — Filtrage et scoring (à valider)
+
+~~~bash
+uv run ajh match --profile examples/profile.toml --stats
+uv run ajh match --profile examples/profile.toml --limit 20
+uv run ajh match --profile examples/profile.toml --state review --limit 20
+uv run ajh match --profile examples/profile.toml --state excluded --limit 20
+~~~
+
+Le profil exemple est configurable (copie locale dans .ajh/ recommandée).
+Il décrit les métiers recherchés, mots-clés techniques, zones et entreprises
+préférées ; il ne certifie pas les compétences d'une personne.
+Chaque résultat JSON Lines comporte score /100, détail des points, motifs,
+contrat, métiers, mots-clés, ID et liens connus. Pondération initiale :
+métier 30, contrat 25, compétences 25 (5 par terme, plafond 25),
+zone 15, entreprise préférée 5. Seuil initial : 60.
+Le score ne garantit ni la disponibilité, ni l'éligibilité académique, ni
+l'adéquation réelle des compétences ; un contrat non explicite ou ambigu,
+une description absente ou une localisation inconnue impose une revue.
+Le niveau senior est repéré via quelques termes ; ni les diplômes requis,
+ni les dates de contrat ne sont filtrés à ce stade.
+
+Le classement parcourt toute la base locale et est recalculé à chaque commande,
+sans LLM ni requête HTTP. Les trois catégories sont match, review, excluded ;
+--stats affiche toutes les catégories. Les doublons intersources à lien,
+entreprise, titre et localisation identiques sont regroupés en lecture
+(IDs conservés ; --no-dedup les réaffiche), jamais supprimés.
+Les entreprises LBA à potentiel ne sont pas des offres et restent hors classement.

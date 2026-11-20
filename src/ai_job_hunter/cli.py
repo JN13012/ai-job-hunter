@@ -18,6 +18,7 @@ from ai_job_hunter.storage import JobStore
 from ai_job_hunter.lba import collect_lba, list_recruiters, count_recruiters
 from ai_job_hunter.catalog import load_catalog, catalog_settings
 from ai_job_hunter.imports import import_jobs
+from ai_job_hunter.matcher import load_profile, rank_jobs, match_dict, STATES
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -76,7 +77,21 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
             elif not settings.boards:
                 print(f"[FAIL] Aucun board configuré dans [[{args.source}.boards]].")
                 return 1
+        if args.command == "match":
+            profile = load_profile(args.profile)
         with JobStore(config.database_path) as store:
+            if args.command == "match":
+                ranked = rank_jobs(store, profile, deduplicate=not args.no_dedup)
+                if args.stats:
+                    counts = {state: sum(m.state == state for m in ranked) for state in STATES}
+                    print(json.dumps({"total": len(ranked), "states": counts,
+                                      "duplicates_grouped": sum(len(m.duplicate_ids) for m in ranked)}, ensure_ascii=False))
+                else:
+                    selected = (m for m in ranked if args.state == "all" or m.state == args.state)
+                    from itertools import islice
+                    for match in islice(selected, args.limit):
+                        print(json.dumps(match_dict(match), ensure_ascii=False))
+                return 0
             if args.command == "import":
                 result = import_jobs(args.file, store)
                 counts = result.counts
@@ -165,10 +180,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     recruiter_list = recruiter_commands.add_parser("list", help="entreprises en JSON Lines")
     recruiter_list.add_argument("--limit", type=_positive_limit, default=20)
     recruiter_commands.add_parser("stats", help="compter les entreprises à potentiel")
+    matching = commands.add_parser("match", help="classer les offres avec un profil TOML local")
+    matching.add_argument("--profile", type=Path, required=True)
+    matching.add_argument("--state", choices=(*STATES, "all"), default="match")
+    matching.add_argument("--limit", type=_positive_limit, default=20)
+    matching.add_argument("--stats", action="store_true", help="bilan de toutes les catégories")
+    matching.add_argument("--no-dedup", action="store_true", help="ne pas regrouper les doublons intersources")
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0

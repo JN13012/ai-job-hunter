@@ -96,3 +96,15 @@ autorisation, utilise JobStore et conserve leur provenance et disponibilité
 non vérifiée. Aucun shell, navigateur, email, scraping ou LLM.
 Le dédoublonnage intersources, l'import direct de messagerie et les nouveaux
 connecteurs spécifiques (non ATS) restent à développer. Validation locale requise.
+
+
+## M3 — Matcher déterministe
+
+matcher.py charge un profil TOML indépendant, normalise accents et casse,
+détecte les termes aux frontières de mots, examine le type de contrat explicite
+et classe les offres SQLite en match/review/excluded. Les données d'origine
+restent inchangées. Résultats recalculés à la lecture, pas de cache ni de
+migration. Regroupement strict de doublons intersources en lecture uniquement.
+Les offres SmartRecruiters sans description sont à vérifier (sauf exclusion
+explicite). Enrichissement ciblé, conservation des anciens détails, filtrage
+des dates et niveaux de diplôme restent à développer. Validation locale requise.

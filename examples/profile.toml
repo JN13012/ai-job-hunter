@@ -1,0 +1,32 @@
+# Exemple modifiable, sans données nominatives. Copier dans .ajh/ avant adaptation.
+# Les termes sont des préférences de recherche, pas des certifications revendiquées.
+min_score = 60
+skills = ["python", "machine learning", "llm", "rag", "fastapi", "langchain", "linux",
+          "nmap", "burp suite", "owasp", "wireshark", "sql", "typescript", "react",
+          "blockchain", "web3", "solidity", "ethereum", "devsecops", "docker"]
+preferred_locations = ["marseille", "aix en provence", "aix-en-provence", "bouches du rhone",
+                       "sophia antipolis", "nice", "provence alpes cote d azur"]
+other_locations = ["france", "paris", "ile de france", "lyon", "toulouse", "bordeaux",
+                   "grenoble", "nantes", "lille", "rennes", "montpellier"]
+# Aucun pays bloqué par défaut : la mobilité reste à confirmer.
+excluded_locations = []
+preferred_companies = ["Thales", "Airbus", "Orange", "Capgemini", "Sopra Steria",
+                       "Accenture", "Cloudflare", "IBM", "SFR", "Microsoft", "Google"]
+
+[roles]
+ai_developer = ["developpeur ia", "developpeur intelligence artificielle", "ai developer",
+                "genai developer", "llm developer", "developpeur genai"]
+ai_engineer = ["ingenieur ia", "ingenieur intelligence artificielle", "ai engineer",
+               "machine learning engineer", "ml engineer", "genai engineer", "llm engineer",
+               "applied ai", "data scientist", "intelligence artificielle", "machine learning"]
+ai_consultant = ["consultant ia", "consultant intelligence artificielle", "ai consultant",
+                 "consultant genai", "consultant ia generative"]
+pentester = ["pentester", "pentest", "penetration tester", "test intrusion", "red team"]
+cyber_consultant = ["consultant cybersecurite", "consultant cyber", "cybersecurity consultant",
+                    "security consultant", "ingenieur cybersecurite", "security engineer",
+                    "cybersecurite", "cybersecurity", "devsecops"]
+blockchain_consultant = ["consultant blockchain", "blockchain consultant", "consultant web3",
+                         "web3 consultant", "consultant crypto"]
+blockchain_developer = ["developpeur blockchain", "blockchain developer", "blockchain engineer",
+                        "smart contract developer", "solidity developer", "web3 developer",
+                        "developpeur web3", "blockchain"]
