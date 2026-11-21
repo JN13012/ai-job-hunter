@@ -297,3 +297,21 @@ aucun clic final par le bot et aucune soumission groupée.
 
 La réalisation est prévue en étapes M7.1 à M7.6. Pour les règles, l'architecture,
 les états et les tests : [docs/APPLICATION_AUTOMATION.md](docs/APPLICATION_AUTOMATION.md).
+
+## M5.1 — Contacts institutionnels (à tester)
+
+M5.1 ajoute un registre local de canaux de recrutement rattachés à des
+entreprises M4 par SIREN et justifiés par une source officielle HTTPS.
+Aucun email n'est généré par conjecture, aucun contact n'est découvert
+automatiquement à cette étape et aucun message n'est envoyé.
+
+```bash
+uv run ajh contacts import --file .ajh/contacts.json
+uv run ajh contacts stats
+uv run ajh contacts list --status pending --limit 20
+uv run ajh contacts approve --id IDENTIFIANT_SHA256
+uv run ajh contacts block --id IDENTIFIANT_SHA256
+```
+
+Format fictif : examples/contacts.example.json ; spécification et limites :
+[docs/CONTACTS.md](docs/CONTACTS.md).

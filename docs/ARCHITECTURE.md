@@ -158,3 +158,13 @@ loopback, contrôler les origines, les droits et les journaux sensibles ;
 ni profil Chrome ni secrets de session n'y sont copiés.
 
 Spécification complète : [APPLICATION_AUTOMATION.md](APPLICATION_AUTOMATION.md).
+
+## M5.1 — Registre local de recrutement
+
+Le module contacts.py crée une table additive recruitment_contacts, liée
+par SIREN aux entreprises company_targets de M4. Import JSON explicite,
+provenance HTTPS obligatoire, déduplication et trois statuts : pending,
+approved, blocked. La revue est humaine. Le blocage efface les coordonnées
+et conserve une empreinte de refus pour éviter une réimportation identique.
+Aucune collecte de contact sur Internet et aucun envoi ne sont implémentés.
+Voir [CONTACTS.md](CONTACTS.md).

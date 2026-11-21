@@ -13,7 +13,7 @@ en priorité, France et zones géographiques configurables.
 | M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
-| M5 | Contacts de recrutement professionnels publiés, provenance et minimisation |
+| M5 | Registre sourcé M5.1 (implémenté, à tester), puis découverte autorisée et qualification M5.2–M5.4 |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
 | M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
@@ -70,3 +70,10 @@ Détails et critères d'acceptation : [APPLICATION_AUTOMATION.md](APPLICATION_AU
   distinguer avertissements de quota et erreurs, conserver les détails déjà acquis.
 - La Bonne Alternance retourne deux catégories distinctes (`jobs`, `recruiters`) ;
   ne pas transformer les entreprises à potentiel en offres publiées.
+
+### M5 — Contacts professionnels
+
+Le socle M5.1 enregistre des canaux de recrutement déclarés, vérifie
+le SIREN, conserve la provenance et empêche toute réimportation d'un
+contact bloqué. L'identification automatique via sources autorisées reste
+à développer. Voir [CONTACTS.md](CONTACTS.md).
