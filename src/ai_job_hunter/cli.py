@@ -23,6 +23,7 @@ from ai_job_hunter.company_discovery import load_searches, discover, company_row
 from ai_job_hunter.contacts import import_contacts, list_contacts, contact_stats, change_contact
 from ai_job_hunter.catalog_channels import qualify_catalog, register_catalog_forms
 from ai_job_hunter.contact_discovery import scan_catalog
+from ai_job_hunter.channel_routing import route_jobs, route_companies
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -62,6 +63,18 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "routes":
+            with JobStore(config.database_path) as store:
+                if args.routes_command == "jobs":
+                    profile = load_profile(args.profile)
+                    targets = load_catalog(args.catalog) if args.catalog else ()
+                    data = route_jobs(store, profile, catalog=targets,
+                                      include_review=args.include_review)
+                else:
+                    data = route_companies(store)
+                for item in data[:args.limit]:
+                    print(json.dumps(item, ensure_ascii=False))
+            return 0
         if args.command == "contacts":
             with JobStore(config.database_path) as store:
                 if args.contacts_command == "discover":
@@ -303,10 +316,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     for action in ("approve", "block"):
         command = contact_commands.add_parser(action, help="vérifier manuellement ou bloquer un contact")
         command.add_argument("--id", required=True)
+    routes = commands.add_parser("routes", help="classer les canaux connus sans réseau ni envoi")
+    route_commands = routes.add_subparsers(dest="routes_command", required=True)
+    route_job = route_commands.add_parser("jobs", help="meilleur canal pour les offres M3")
+    route_job.add_argument("--profile", type=Path, required=True)
+    route_job.add_argument("--catalog", type=Path, help="liaison exacte board ATS / SIREN déclaré")
+    route_job.add_argument("--include-review", action="store_true", help="inclure les offres M3 à vérifier")
+    route_job.add_argument("--limit", type=_positive_limit, default=20)
+    route_companies_parser = route_commands.add_parser("companies", help="canaux de candidature spontanée")
+    route_companies_parser.add_argument("--limit", type=_positive_limit, default=20)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
