@@ -1,0 +1,18 @@
+[
+  {
+    "siren": "123456789",
+    "channel": "email",
+    "target": "recrutement@example.org",
+    "role": "recruitment",
+    "source_url": "https://example.org/carrieres",
+    "source_type": "company_careers"
+  },
+  {
+    "siren": "123456789",
+    "channel": "form",
+    "target": "https://example.org/candidatures",
+    "role": "careers",
+    "source_url": "https://example.org/carrieres",
+    "source_type": "company_careers"
+  }
+]

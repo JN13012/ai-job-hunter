@@ -20,6 +20,7 @@ from ai_job_hunter.catalog import load_catalog, catalog_settings
 from ai_job_hunter.imports import import_jobs
 from ai_job_hunter.matcher import load_profile, rank_jobs, match_dict, STATES
 from ai_job_hunter.company_discovery import load_searches, discover, company_rows, company_stats
+from ai_job_hunter.contacts import import_contacts, list_contacts, contact_stats, change_contact
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -59,6 +60,20 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "contacts":
+            with JobStore(config.database_path) as store:
+                if args.contacts_command == "import":
+                    counts = import_contacts(args.file, store)
+                    print(f"Nouvelles : {counts.new} | Mises à jour : {counts.updated} | Inchangées : {counts.unchanged}")
+                elif args.contacts_command == "list":
+                    for item in list_contacts(store, args.limit, args.status):
+                        print(json.dumps(item, ensure_ascii=False))
+                elif args.contacts_command == "stats":
+                    print(json.dumps(contact_stats(store), ensure_ascii=False))
+                else:
+                    change_contact(store, args.id, args.contacts_command)
+                    print("[OK] Statut mis à jour.")
+            return 0
         if args.command == "companies":
             if args.companies_command == "discover":
                 settings = load_searches(args.file)
@@ -224,10 +239,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     company_list.add_argument("--catalog", type=Path, help="lier les entreprises par SIREN déclaré")
     company_stats_parser = company_commands.add_parser("stats", help="bilan des entreprises découvertes")
     company_stats_parser.add_argument("--catalog", type=Path, help="lier les entreprises par SIREN déclaré")
+    contacts = commands.add_parser("contacts", help="canaux de recrutement sourcés ; aucun envoi")
+    contact_commands = contacts.add_subparsers(dest="contacts_command", required=True)
+    contact_import = contact_commands.add_parser("import", help="charger des contacts publics fournis par l'utilisateur")
+    contact_import.add_argument("--file", type=Path, required=True)
+    contact_list = contact_commands.add_parser("list", help="lister les contacts avec leurs statuts")
+    contact_list.add_argument("--limit", type=_positive_limit, default=20)
+    contact_list.add_argument("--status", choices=("all", "pending", "approved", "blocked"), default="all")
+    contact_commands.add_parser("stats", help="compter les canaux par statut")
+    for action in ("approve", "block"):
+        command = contact_commands.add_parser(action, help="vérifier manuellement ou bloquer un contact")
+        command.add_argument("--id", required=True)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
