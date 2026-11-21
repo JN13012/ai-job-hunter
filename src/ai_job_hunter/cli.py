@@ -85,17 +85,29 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
             directory = args.draft.resolve()
             if directory.parent != base or directory.is_symlink():
                 raise ValueError("Le brouillon doit être un dossier direct sous .ajh/drafts.")
-            letter = (directory / "letter.md").read_text(encoding="utf-8")
-            manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+            original = directory / "letter.md"
+            if original.is_symlink() or not original.is_file():
+                raise ValueError("Brouillon invalide ou lien symbolique interdit.")
+            letter = original.read_text(encoding="utf-8")
+            manifest_path = directory / "manifest.json"
+            if manifest_path.is_symlink() or not manifest_path.is_file():
+                raise ValueError("Manifeste invalide ou lien symbolique interdit.")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             if manifest.get("status") != "draft_requires_human_review":
                 raise ValueError("Statut du brouillon inattendu.")
-            # No candidate identity is sent to the model by default.
-            facts = "\n".join(
+            # Le texte réel contient des coordonnées. Ne transmettre à Ollama
+            # que les phrases professionnelles sélectionnées, sans identité.
+            safe_sentences = [
                 line for line in letter.splitlines()
-                if line.startswith("Parmi mes compétences") or line.startswith("Je suis actuellement")
-            )
+                if line.startswith("Parmi mes compétences")
+                or line.startswith("Je suis actuellement")
+                or line.startswith("Je souhaite mettre à profit")
+            ]
+            if not safe_sentences:
+                raise ValueError("Aucun fragment professionnel sûr à reformuler.")
+            minimized = "\n".join(safe_sentences)
             suggestion = propose_rewrite(
-                letter, facts, str(manifest.get("title") or ""),
+                minimized, minimized, str(manifest.get("title") or ""),
                 model=args.model, budget=TokenBudget(args.token_budget),
                 cache_dir=config.data_dir / "llm_cache",
             )

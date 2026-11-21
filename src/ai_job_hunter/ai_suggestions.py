@@ -65,6 +65,7 @@ def propose_rewrite(
         json.dumps([VERSION, model, prompt], ensure_ascii=False).encode("utf-8")
     ).hexdigest()
     entry = cache_dir / (key + ".json")
+    # The cache is inside .ajh and must never be exposed via HTTP.
     if entry.exists():
         try:
             raw = json.loads(entry.read_text(encoding="utf-8"))

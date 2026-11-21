@@ -1,6 +1,5 @@
 """M6 : dossiers de candidature déterministes locaux, toujours non soumis."""
 
-from dataclasses import asdict
 from datetime import UTC, datetime
 import hashlib
 import json
@@ -111,6 +110,8 @@ def prepare_job(
     prepared = compose_draft(candidate, selected, record["description"])
     content = json.dumps(prepared, ensure_ascii=False, sort_keys=True).encode("utf-8")
     digest = hashlib.sha256(content).hexdigest()[:16]
+    if output_dir.is_symlink():
+        raise ValueError("Répertoire de brouillons symbolique interdit.")
     destination = output_dir / (job_id + "-" + digest)
     if destination.exists():
         raise ValueError("Dossier déjà présent : aucun fichier écrasé.")
