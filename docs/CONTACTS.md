@@ -1,6 +1,6 @@
 # M5 — Contacts de recrutement professionnels
 
-Statut : M5.1 validé localement (202 tests), M5.2 implémenté à tester ; M5.3 implémenté à tester ; M5.4 à développer.
+Statut : M5.1 validé localement (202 tests), M5.2 implémenté à tester ; M5.3 et M5.4 implémentés à tester.
 
 ## Objectif
 
@@ -16,7 +16,7 @@ automatique de contacts, ni scraping, ni envoi de candidature.
 | M5.1 | Registre SQLite, import JSON, source HTTPS, SIREN M4, déduplication, approbation et opposition | À tester |
 | M5.2 | Qualification statique de formulaires déclarés, sans exploration de site | Implémenté, à tester |
 | M5.3 | Analyse opt-in d'une page carrière autorisée, extraction des liens RH explicites | Implémenté, à tester |
-| M5.4 | Classement et transmission des canaux vérifiés aux dossiers M6/M7 | À développer |
+| M5.4 | Routage déterministe des canaux pour les offres et entreprises, JSON Lines vers M6/M7 | Implémenté, à tester |
 
 ## Schéma et contraintes
 
@@ -125,3 +125,21 @@ présent, les résultats restent `pending`, jamais `approved` automatiquement.
 La vérification `robots.txt` ne constitue pas une permission contractuelle ;
 la preuve `permission_note` reste déclarative. Le code ne prétend pas
 garantir la compatibilité de tous les sites ou la qualité des canaux.
+
+## Routage M5.4
+
+```bash
+uv run ajh routes jobs --profile examples/profile.toml --catalog examples/catalog.toml --limit 20
+uv run ajh routes jobs --profile examples/profile.toml --include-review --limit 20
+uv run ajh routes companies --limit 20
+```
+
+Priorités : lien direct de candidature de l'offre (100), formulaire de
+recrutement approuvé (80), email professionnel approuvé (60). Le lien direct
+n'est pas vérifié et peut être devenu indisponible ; la priorité n'implique
+ni permission d'automatiser ni formulaire opérationnel. Une entreprise sans
+SIREN explicitement fourni ne reçoit jamais les contacts d'une homonyme.
+Seul un contact `approved` est éligible ; `pending`/`blocked` sont exclus.
+Les choix sont expliqués avec statuts de vérification et alternatives.
+Candidatures spontanées : l'existence d'un canal n'est pas une preuve de
+recrutement. **Aucune action réseau, modification SQLite ou envoi.**

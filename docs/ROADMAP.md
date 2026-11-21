@@ -13,7 +13,7 @@ en priorité, France et zones géographiques configurables.
 | M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
-| M5 | M5.1 registre sourcé validé ; M5.2 et M5.3 (analyse opt-in d'une page) implémentés à tester ; M5.4 à développer |
+| M5 | M5.1 validé ; M5.2–M5.4 implémentés, tests M5.2–M5.4 à exécuter |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
 | M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
@@ -96,3 +96,13 @@ de requêtes et de taille, aucune adresse email reconstruite. Seuls des
 liens de candidature spontanée ou boîtes de recrutement génériques publiées
 sont proposés. `--fetch` active les accès HTTP ; `--register` les inscrit en
 attente, sans approbation ni envoi. Les données ne sont pas vérifiées en réel.
+
+#### M5.4 — Routage déterministe des candidatures
+
+`channel_routing.py` classe les canaux connus sans réseau : URL de candidature
+par offre (priorité 100), formulaire RH approuvé (80), email professionnel
+approuvé (60). Un canal pending/blocked est exclu. Le rattachement au SIREN
+s'effectue uniquement par le SIRET explicite LBA ou le board ATS déclaré dans
+le catalogue avec SIREN. Aucun appariement flou par raison sociale.
+Les URLs directes restent non vérifiées ; priorité ne signifie pas droit
+d'automatisation. Les résultats sont JSON Lines, en lecture seule, pour M6/M7.

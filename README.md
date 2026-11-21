@@ -349,3 +349,19 @@ uv run ajh contacts discover --file .ajh/mon-catalogue.toml --fetch --register
 Le catalogue requiert `allow_contact_scan = true`, `permission_note` et un
 SIREN M4 connu ; `--register` conserve les canaux en attente de revue.
 Voir [docs/CONTACTS.md](docs/CONTACTS.md) pour les garde-fous.
+
+## M5.4 — Routage des canaux (à tester)
+
+Le bot classe les voies de candidature disponibles depuis les offres et
+les entreprises M4 : lien d'offre direct, formulaire RH approuvé, email RH
+approuvé. La correspondance entreprise exige un SIREN explicite et les
+contacts en attente ou bloqués ne sont jamais proposés. Sortie JSON Lines
+prête à être consommée ultérieurement par M6/M7.
+
+```bash
+uv run ajh routes jobs --profile examples/profile.toml --catalog examples/catalog.toml --limit 20
+uv run ajh routes companies --limit 20
+```
+
+M5.4 ne visite aucune page ni n'envoie de candidature. Tous les liens
+restent soumis à vérification et le clic final Envoyer reste humain.

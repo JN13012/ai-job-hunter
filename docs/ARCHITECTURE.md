@@ -191,3 +191,14 @@ spontanée (même domaine) et les boîtes de recrutement génériques explicitem
 liées ; il ignore les emails nominatifs. L'enregistrement optionnel réutilise
 la persistance et la revue `pending` de M5.1, sans envoi. Les blocages et
 approbations existants sont conservés si les données sont inchangées.
+
+## M5.4 — Routage explicable en lecture seule
+
+`channel_routing.py` fournit `route_jobs` (offres M3) et `route_companies`
+(candidatures spontanées M4). La priorité des canaux est déterministe :
+URL de candidature directe d'offre > formulaire d'entreprise approuvé >
+email RH approuvé. Aucun contact pending/blocked n'est sélectionné. Le
+rattachement entreprise utilise un SIREN explicite (SIRET LBA ou catalogue
+board ATS), jamais une similitude de nom. Le module ne modifie pas SQLite
+et n'envoie aucune requête. La sortie marque explicitement l'autorisation
+d'automatisation comme inconnue/non accordée et exige le dernier clic humain.
