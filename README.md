@@ -365,3 +365,24 @@ uv run ajh routes companies --limit 20
 
 M5.4 ne visite aucune page ni n'envoie de candidature. Tous les liens
 restent soumis à vérification et le clic final Envoyer reste humain.
+
+## M6 — Préparation locale des dossiers (à tester)
+
+Copier examples/candidate.example.toml vers .ajh/candidate.toml ; ne jamais
+commiter les coordonnées réelles. Renseigner les compétences pratiquées dans
+facts.skills et les compétences en cours dans facts.learning.
+
+```bash
+uv run ajh prepare --profile examples/profile.toml --candidate .ajh/candidate.toml --job-id ID_OFFRE --catalog examples/catalog.toml
+```
+
+Les fichiers CV et lettre Markdown, réponses JSON et manifeste non validé
+sont créés dans .ajh/drafts. Aucun envoi ni modification d'un formulaire.
+Une reformulation Ollama facultative peut être demandée séparément :
+
+```bash
+uv run ajh rewrite --draft .ajh/drafts/NOM_DOSSIER --model llama3.2:3b --token-budget 1000
+```
+
+La suggestion IA est distincte et doit être relue ; le document original
+n'est pas remplacé. Voir [docs/AI_SECURITY.md](docs/AI_SECURITY.md).

@@ -1,0 +1,24 @@
+# EXEMPLE FICTIF - copier sous .ajh/candidate.toml pour personnaliser.
+[identity]
+full_name = "Candidate Exemple"
+email = "candidate@example.org"
+city = "Marseille"
+headline = "Étudiant en informatique"
+portfolio_url = "https://example.org/portfolio"
+
+[facts]
+skills = ["Python", "Linux", "SQL"]
+learning = ["Rust", "Kubernetes"]
+experiences = ["Projet académique Python"]
+education = ["Formation supérieure en informatique (en cours)"]
+certifications = []
+projects = ["Projet d’analyse de données"]
+languages = ["Français", "Anglais"]
+
+[application]
+availability = "À définir"
+alternance_rhythm = "À définir"
+motivation = "Je souhaite contribuer à vos projets et progresser."
+
+[answers]
+work_authorization = "À confirmer"

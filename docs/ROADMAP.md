@@ -14,7 +14,7 @@ en priorité, France et zones géographiques configurables.
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | M5.1 validé ; M5.2–M5.4 implémentés, tests M5.2–M5.4 à exécuter |
-| M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
+| M6 | CV/lettres factuels, réponses déclarées, suggestions Ollama locales avec cache et budget — implémenté, à tester |
 | M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
 | M9 | Tableau de bord local : file de candidatures, dossiers prêts, validation humaine et suivi |
@@ -106,3 +106,11 @@ s'effectue uniquement par le SIRET explicite LBA ou le board ATS déclaré dans
 le catalogue avec SIREN. Aucun appariement flou par raison sociale.
 Les URLs directes restent non vérifiées ; priorité ne signifie pas droit
 d'automatisation. Les résultats sont JSON Lines, en lecture seule, pour M6/M7.
+
+### M6 — Brouillons sécurisés
+
+Le profil candidat TOML sépare compétences acquises et en cours. Un dossier
+local par offre contient CV Markdown, lettre, réponses et manifeste non validé.
+Ollama reste facultatif, local et sans accès navigateur. Ses suggestions sont
+conservées séparément et jamais promues automatiquement. Détails :
+[AI_SECURITY.md](AI_SECURITY.md).

@@ -202,3 +202,12 @@ rattachement entreprise utilise un SIREN explicite (SIRET LBA ou catalogue
 board ATS), jamais une similitude de nom. Le module ne modifie pas SQLite
 et n'envoie aucune requête. La sortie marque explicitement l'autorisation
 d'automatisation comme inconnue/non accordée et exige le dernier clic humain.
+
+## M6 — Sécurité IA et brouillons privés
+
+Les modules candidate.py et application_drafts.py créent les brouillons
+factuels à partir du profil et du routage M5.4. Les fichiers sont placés sous
+.ajh/drafts et le manifeste impose une revue humaine. ai_suggestions.py
+propose un changement éditorial local via Ollama, budget token plafonné et
+cache dans .ajh/llm_cache. Pas d'envoi ni de remplissage navigateur.
+Voir [AI_SECURITY.md](AI_SECURITY.md).
