@@ -35,6 +35,8 @@ class Target:
     board_token: str | None = None
     siren: str | None = None
     application_form_url: str | None = None
+    allow_contact_scan: bool = False
+    permission_note: str | None = None
 
 
 def load_catalog(path: Path) -> tuple[Target, ...]:
@@ -46,7 +48,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
     targets = []
     identities = set()
     for entry in entries:
-        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token", "siren", "application_form_url"}:
+        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token", "siren", "application_form_url", "allow_contact_scan", "permission_note"}:
             raise ValueError("Entrée de catalogue invalide.")
         company, source = entry.get("company"), entry.get("source")
         if not isinstance(company, str) or not company.strip():
@@ -58,6 +60,17 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
         siren = entry.get("siren")
         if siren is not None and (not isinstance(siren, str) or not re.fullmatch(r"\d{9}", siren)):
             raise ValueError("SIREN de catalogue invalide.")
+        allow_scan = entry.get("allow_contact_scan", False)
+        permission_note = entry.get("permission_note")
+        if type(allow_scan) is not bool:
+            raise ValueError("allow_contact_scan doit être un booléen TOML.")
+        if permission_note is not None and (
+            not isinstance(permission_note, str) or not 12 <= len(permission_note.strip()) <= 400
+            or any(ord(ch) < 32 for ch in permission_note)
+        ):
+            raise ValueError("permission_note doit décrire l'autorisation sans données sensibles.")
+        if allow_scan and (source != "manual" or not siren or not permission_note):
+            raise ValueError("Analyse réseau réservée aux pages manuelles avec SIREN et justification d'autorisation.")
         form_url = entry.get("application_form_url")
         if form_url is not None:
             # A declaration is not a verification. The form stays pending in M5.
@@ -85,7 +98,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
         if identity in identities:
             raise ValueError("Cible dupliquée dans le catalogue.")
         identities.add(identity)
-        targets.append(Target(company.strip(), url, source, token, siren, form_url))
+        targets.append(Target(company.strip(), url, source, token, siren, form_url, allow_scan, permission_note.strip() if permission_note else None))
     return tuple(targets)
 
 

@@ -22,6 +22,7 @@ from ai_job_hunter.matcher import load_profile, rank_jobs, match_dict, STATES
 from ai_job_hunter.company_discovery import load_searches, discover, company_rows, company_stats
 from ai_job_hunter.contacts import import_contacts, list_contacts, contact_stats, change_contact
 from ai_job_hunter.catalog_channels import qualify_catalog, register_catalog_forms
+from ai_job_hunter.contact_discovery import scan_catalog
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -63,6 +64,30 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
         config = load_config(args.config)
         if args.command == "contacts":
             with JobStore(config.database_path) as store:
+                if args.contacts_command == "discover":
+                    targets = load_catalog(args.file)
+                    with httpx.Client(
+                        timeout=10.0, follow_redirects=False, trust_env=False,
+                        headers={"User-Agent": "AI-Job-Hunter/0.1 (AI-Job-Hunter; contact discovery)",
+                                 "Accept": "text/html,text/plain"},
+                    ) as client:
+                        report = scan_catalog(
+                            store, targets, client, fetch=args.fetch,
+                            register=args.register, max_pages=args.max_pages,
+                        )
+                    for candidate in report.candidates:
+                        print(json.dumps(candidate, ensure_ascii=False))
+                    for message in report.warnings:
+                        print(f"[WARN] {message}", file=sys.stderr)
+                    for message in report.errors:
+                        print(f"[FAIL] {message}", file=sys.stderr)
+                    print(
+                        f"[INFO] Requêtes={report.requests}, pages={report.pages}, "
+                        f"ignorées={report.skipped}, contacts={len(report.candidates)}, "
+                        f"nouvelles={report.writes.new}, erreurs={len(report.errors)}",
+                        file=sys.stderr,
+                    )
+                    return 1 if report.errors else 0
                 if args.contacts_command == "catalog":
                     targets = load_catalog(args.file)
                     candidates = qualify_catalog(store, targets)
@@ -268,6 +293,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--register", action="store_true",
         help="inscrire uniquement les formulaires explicites dans pending",
     )
+    discovery = contact_commands.add_parser(
+        "discover", help="extraire les canaux d'une seule page carrière opt-in par société"
+    )
+    discovery.add_argument("--file", type=Path, required=True, help="catalogue TOML avec autorisation explicite")
+    discovery.add_argument("--fetch", action="store_true", help="activer les requêtes GET autorisées")
+    discovery.add_argument("--register", action="store_true", help="enregistrer uniquement comme pending")
+    discovery.add_argument("--max-pages", type=_positive_limit, default=10)
     for action in ("approve", "block"):
         command = contact_commands.add_parser(action, help="vérifier manuellement ou bloquer un contact")
         command.add_argument("--id", required=True)
