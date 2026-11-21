@@ -34,6 +34,7 @@ class Target:
     source: str
     board_token: str | None = None
     siren: str | None = None
+    application_form_url: str | None = None
 
 
 def load_catalog(path: Path) -> tuple[Target, ...]:
@@ -45,7 +46,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
     targets = []
     identities = set()
     for entry in entries:
-        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token", "siren"}:
+        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token", "siren", "application_form_url"}:
             raise ValueError("Entrée de catalogue invalide.")
         company, source = entry.get("company"), entry.get("source")
         if not isinstance(company, str) or not company.strip():
@@ -57,6 +58,18 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
         siren = entry.get("siren")
         if siren is not None and (not isinstance(siren, str) or not re.fullmatch(r"\d{9}", siren)):
             raise ValueError("SIREN de catalogue invalide.")
+        form_url = entry.get("application_form_url")
+        if form_url is not None:
+            # A declaration is not a verification. The form stays pending in M5.
+            form_url = public_url(form_url)
+            career_parsed = urlsplit(url)
+            form_parsed = urlsplit(form_url)
+            if career_parsed.query or career_parsed.fragment:
+                raise ValueError("La provenance du formulaire ne doit pas contenir de paramètre.")
+            if form_parsed.query or form_parsed.fragment:
+                raise ValueError("URL de formulaire avec requête ou fragment interdite.")
+            if form_parsed.hostname != career_parsed.hostname:
+                raise ValueError("Formulaire sur un autre hôte : importer manuellement avec preuve dédiée.")
         if source == "manual":
             if token is not None:
                 raise ValueError("Une cible manuelle ne peut pas avoir de board_token.")
@@ -72,7 +85,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
         if identity in identities:
             raise ValueError("Cible dupliquée dans le catalogue.")
         identities.add(identity)
-        targets.append(Target(company.strip(), url, source, token, siren))
+        targets.append(Target(company.strip(), url, source, token, siren, form_url))
     return tuple(targets)
 
 

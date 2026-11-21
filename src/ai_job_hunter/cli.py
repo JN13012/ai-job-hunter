@@ -21,6 +21,7 @@ from ai_job_hunter.imports import import_jobs
 from ai_job_hunter.matcher import load_profile, rank_jobs, match_dict, STATES
 from ai_job_hunter.company_discovery import load_searches, discover, company_rows, company_stats
 from ai_job_hunter.contacts import import_contacts, list_contacts, contact_stats, change_contact
+from ai_job_hunter.catalog_channels import qualify_catalog, register_catalog_forms
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -62,7 +63,19 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
         config = load_config(args.config)
         if args.command == "contacts":
             with JobStore(config.database_path) as store:
-                if args.contacts_command == "import":
+                if args.contacts_command == "catalog":
+                    targets = load_catalog(args.file)
+                    candidates = qualify_catalog(store, targets)
+                    for candidate in candidates:
+                        print(json.dumps(candidate, ensure_ascii=False))
+                    if args.register:
+                        counts = register_catalog_forms(store, candidates)
+                        print(
+                            f"[INFO] Contacts en attente — nouvelles : {counts.new}, "
+                            f"mises à jour : {counts.updated}, inchangées : {counts.unchanged}",
+                            file=sys.stderr,
+                        )
+                elif args.contacts_command == "import":
                     counts = import_contacts(args.file, store)
                     print(f"Nouvelles : {counts.new} | Mises à jour : {counts.updated} | Inchangées : {counts.unchanged}")
                 elif args.contacts_command == "list":
@@ -247,6 +260,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     contact_list.add_argument("--limit", type=_positive_limit, default=20)
     contact_list.add_argument("--status", choices=("all", "pending", "approved", "blocked"), default="all")
     contact_commands.add_parser("stats", help="compter les canaux par statut")
+    catalog_contacts = contact_commands.add_parser(
+        "catalog", help="qualifier les canaux du catalogue sans requête HTTP"
+    )
+    catalog_contacts.add_argument("--file", type=Path, required=True, help="catalogue TOML")
+    catalog_contacts.add_argument(
+        "--register", action="store_true",
+        help="inscrire uniquement les formulaires explicites dans pending",
+    )
     for action in ("approve", "block"):
         command = contact_commands.add_parser(action, help="vérifier manuellement ou bloquer un contact")
         command.add_argument("--id", required=True)

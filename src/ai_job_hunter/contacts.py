@@ -127,6 +127,18 @@ def import_contacts(path: Path, store: JobStore) -> WriteCounts:
         if contact.id in contacts and contacts[contact.id] != contact:
             raise ValueError(f"Contact {number} : doublon contradictoire.")
         contacts[contact.id] = contact
+    return save_contacts(store, tuple(contacts.values()))
+
+
+def save_contacts(store: JobStore, records: tuple[Contact, ...]) -> WriteCounts:
+    """Persist normalized declared contacts, preserving reviewed and blocked states."""
+    contacts: dict[str, Contact] = {}
+    for contact in records:
+        if contact.id in contacts and contacts[contact.id] != contact:
+            raise ValueError("Contacts contradictoires dans le même lot.")
+        contacts[contact.id] = contact
+    if not contacts:
+        return WriteCounts()
     ensure_companies(store)
     ensure_contacts(store)
     available = {row[0] for row in store.connection.execute("SELECT siren FROM company_targets")}
