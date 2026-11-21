@@ -315,3 +315,20 @@ uv run ajh contacts block --id IDENTIFIANT_SHA256
 
 Format fictif : examples/contacts.example.json ; spécification et limites :
 [docs/CONTACTS.md](docs/CONTACTS.md).
+
+## M5.2 — Qualification du catalogue (à tester)
+
+Le catalogue peut déclarer un `application_form_url` pour une société dont
+le SIREN est connu dans M4. Cette URL doit être HTTPS, sur le même hôte
+que `career_url` et dépourvue de query/fragment. Le diagnostic distingue
+pages carrières, boards ATS et formulaires explicitement déclarés.
+
+```bash
+uv run ajh contacts catalog --file examples/catalog.toml
+uv run ajh contacts catalog --file .ajh/mon-catalogue.toml --register
+uv run ajh contacts list --status pending
+```
+
+La seconde commande inscrit seulement les formulaires déclarés dans le registre
+de contacts, sans validation automatique, collecte réseau ou envoi. Voir
+[docs/CONTACTS.md](docs/CONTACTS.md).

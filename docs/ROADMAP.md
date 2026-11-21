@@ -13,7 +13,7 @@ en priorité, France et zones géographiques configurables.
 | M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
-| M5 | Registre sourcé M5.1 (implémenté, à tester), puis découverte autorisée et qualification M5.2–M5.4 |
+| M5 | M5.1 registre sourcé (202 tests validés), M5.2 qualification statique des formulaires déclarés (à tester), M5.3–M5.4 à développer |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
 | M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
@@ -77,3 +77,11 @@ Le socle M5.1 enregistre des canaux de recrutement déclarés, vérifie
 le SIREN, conserve la provenance et empêche toute réimportation d'un
 contact bloqué. L'identification automatique via sources autorisées reste
 à développer. Voir [CONTACTS.md](CONTACTS.md).
+
+#### M5.2 — Qualification des canaux déclarés
+
+Le catalogue accepte `application_form_url` facultatif : HTTPS, même hôte que
+`career_url`, sans paramètres ni fragment. Les cibles avec SIREN connu dans M4
+et formulaire explicitement déclaré peuvent être inscrites en contacts M5.1
+avec statut `pending`, jamais `approved` automatiquement. Ni réseau ni envoi.
+Les URLs ATS par offre ne sont pas assimilées à des formulaires spontanés.

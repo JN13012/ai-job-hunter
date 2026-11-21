@@ -139,8 +139,6 @@ career_url = "https://job-boards.greenhouse.io/cloudflare"
 def test_jobs_links_are_not_company_form(store, catalog):
     from ai_job_hunter.models import Job
     now = datetime.now(UTC)
-    with JobStore(store.connection.execute("PRAGMA database_list").fetchone()[2]) as _:
-        pass
     job = Job(
         id="job-1", external_id="job-1", source="lever", board_token="fixture",
         company="Société sans SIREN", title="Alternance", location_raw="Marseille",

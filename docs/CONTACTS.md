@@ -1,6 +1,6 @@
 # M5 — Contacts de recrutement professionnels
 
-Statut : M5.1 implémenté sur une branche, tests locaux requis. M5.2–5.4 restent à développer.
+Statut : M5.1 validé localement (202 tests), M5.2 implémenté à tester ; M5.3–M5.4 à développer.
 
 ## Objectif
 
@@ -14,7 +14,7 @@ automatique de contacts, ni scraping, ni envoi de candidature.
 | Mission | Portée | État |
 | --- | --- | --- |
 | M5.1 | Registre SQLite, import JSON, source HTTPS, SIREN M4, déduplication, approbation et opposition | À tester |
-| M5.2 | Qualification des formulaires officiels déjà présents dans le catalogue | À développer |
+| M5.2 | Qualification statique de formulaires déclarés, sans exploration de site | Implémenté, à tester |
 | M5.3 | Recherche de canaux via API ou sources explicitement autorisées, avec limites de fréquence | À étudier par site |
 | M5.4 | Classement et transmission des canaux vérifiés aux dossiers M6/M7 | À développer |
 
@@ -71,3 +71,22 @@ L'approbation d'un contact ne vaut pas autorisation d'expédier un message.
 
 La règle M7 reste distincte : le bot cherche et prépare les candidatures,
 mais le dernier clic Envoyer sur le site reste une action humaine.
+
+## Qualification M5.2
+
+Une cible peut déclarer explicitement `siren` et `application_form_url`.
+Le formulaire doit être HTTPS, sur le même hôte que `career_url`, sans query
+ou fragment. Cette déclaration n'est pas une validation de la page.
+
+```bash
+uv run ajh contacts catalog --file examples/catalog.toml
+uv run ajh contacts catalog --file .ajh/mon-catalogue.toml --register
+uv run ajh contacts list --status pending
+```
+
+Statuts du diagnostic : `missing_siren`, `company_not_in_m4`,
+`form_not_declared`, `ready_for_review`. Seuls les formulaires explicites
+avec SIREN présent dans M4 sont inscrits, toujours en attente de contrôle.
+Les URL de candidature par offre ATS ne sont pas promues en canaux génériques.
+Les formulaires sur hôte tiers exigent un import manuel avec provenance propre.
+Aucune connexion réseau, détection DOM ou soumission n'est effectuée.

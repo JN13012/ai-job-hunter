@@ -168,3 +168,13 @@ approved, blocked. La revue est humaine. Le blocage efface les coordonnées
 et conserve une empreinte de refus pour éviter une réimportation identique.
 Aucune collecte de contact sur Internet et aucun envoi ne sont implémentés.
 Voir [CONTACTS.md](CONTACTS.md).
+
+## M5.2 — Qualification statique des canaux de candidature
+
+`catalog_channels.py` classe les entrées du catalogue, sans HTTP : page
+carrières, board ATS, formulaire déclaré. `contacts catalog --file` produit
+un bilan JSON Lines. L'option `--register` ne conserve que les formulaires
+explicitement déclarés et rattachés au SIREN d'une entreprise M4.
+Les entrées sont persistées via le registre M5.1 : déduplication, statut
+`pending` et maintien des oppositions. Une URL déclarée ne prouve pas
+que le formulaire existe ou autorise une automatisation.
