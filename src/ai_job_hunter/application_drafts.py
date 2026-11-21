@@ -82,7 +82,8 @@ def compose_draft(candidate: Candidate, route: dict, description: str | None) ->
         "Cordialement,\n" + _line(candidate.full_name),
     ] if p).strip() + "\n"
     return {
-        "job_id": route["job_id"], "company": route["company"],
+        "job_id": route["job_id"], "related_job_ids": route.get("related_job_ids", []),
+        "company": route["company"],
         "title": route["title"], "match_score": route["match_score"],
         "routing_status": route["routing_status"],
         "channel": chosen, "cv_markdown": cv, "letter_markdown": letter,
