@@ -15,9 +15,9 @@ en priorité, France et zones géographiques configurables.
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | Contacts de recrutement professionnels publiés, provenance et minimisation |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
-| M7 | Préparation et envoi supervisé, preuve d'envoi, prévention des doublons |
-| M8 | Suivi, relances limitées, planification |
-| M9 | Tableau de bord local |
+| M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
+| M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
+| M9 | Tableau de bord local : file de candidatures, dossiers prêts, validation humaine et suivi |
 
 ## Politique des sources
 
@@ -31,13 +31,38 @@ en priorité, France et zones géographiques configurables.
 - Free-Work : annuaire des ESN et offres via accès permis ; pas d'extraction en masse.
 - Sites carrières officiels, SIRENE : vérifier l'autorisation et la provenance.
 
-## Candidatures
+## Candidatures — fonctionnement cible
 
-Offre sélectionnée ou entreprise cible → dossier factuel → validation humaine →
-API habilitée, formulaire Playwright si permis, email professionnel publié,
-ou candidature manuelle assistée. Aucun contournement de CAPTCHA, aucun email
-deviné, aucun envoi en masse ; arrêt sur protection, erreur ou doute.
-Aucune soumission n'est implémentée à M2.1.
+**AI Job Hunter recherche et ouvre lui-même les offres.** L'utilisateur n'a
+pas à chercher les annonces, ouvrir les pages ou remplir les champs en
+fonctionnement nominal. Après classement et préparation des documents, le
+bot navigue et remplit les formulaires sur les sites qui l'autorisent.
+
+**Règle non négociable : aucun clic automatique final sur « Envoyer »**,
+aucun appel API de soumission et aucune validation groupée. L'utilisateur
+voit le vrai formulaire dans un navigateur visible, contrôle chaque dossier
+et clique personnellement sur le bouton de soumission. Un clic ne prouve pas
+l'envoi : seule une confirmation explicite permet de marquer « envoyé ».
+
+Moteur principal : Playwright piloté localement en Python. Extension Chrome
+Manifest V3 complémentaire, uniquement pour les sessions et sites compatibles.
+Le passage en navigateur visible est obligatoire avant le clic humain. Les
+sites interdisant cette automatisation restent en mode dossier préparé /
+assistance manuelle ; ne jamais contourner CAPTCHA, MFA ou protections.
+
+### Sous-étapes M7
+
+| Mission | Livrable |
+| --- | --- |
+| M7.1 | File persistée, orchestrateur, verrouillage par offre/destination, annulation, reprise sûre |
+| M7.2 | Navigation Playwright autonome depuis la file, domaines et redirections contrôlés, navigateur visible avant validation |
+| M7.3 | Adaptateurs autorisés de formulaires, remplissage, vérification et étapes intermédiaires non soumissives |
+| M7.4 | CV, lettres et réponses factuelles, pièces jointes locales et contrôle des données |
+| M7.5 | Barrière anti-soumission, arrêt avant « Envoyer », clic humain obligatoire, preuve de confirmation et suivi |
+| M7.6 | Extension Chrome optionnelle, connexion au backend local sécurisée, permissions minimales et mêmes garde-fous |
+
+Détails et critères d'acceptation : [APPLICATION_AUTOMATION.md](APPLICATION_AUTOMATION.md).
+**Ces fonctionnalités M7 sont planifiées et non implémentées.**
 
 ### Suivi M2.1 / M3
 

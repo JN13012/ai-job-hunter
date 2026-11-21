@@ -37,10 +37,11 @@ le plus récemment collecté et les bornes de première/dernière observation, s
 historique complet des versions. Les réponses partielles ne déclenchent aucune
 suppression ; les offres disparues ne sont pas interprétées comme fermées.
 
-## Responsabilités et extensions futures
+## Responsabilités et extensions
 
-Collectors, Normalizer, Storage et CLI existent pour la tranche Greenhouse M1.
-Matcher, AI et Applications restent non implémentés.
+Les collecteurs et la persistance ont été étendus par les étapes M2 à M4
+sur cette branche (validation progressive). Les composants de navigation,
+remplissage, soumission humaine et suivi M7 restent non implémentés.
 
 | Composant | Responsabilité |
 | --- | --- |
@@ -49,7 +50,7 @@ Matcher, AI et Applications restent non implémentés.
 | Matcher | Filtres explicites et score déterministe explicable à partir du profil candidat. |
 | Storage | SQLite via `sqlite3` : offres, résultats de traitement, historique des candidatures et réponses. |
 | AI | Interface facultative pour l'analyse sémantique ; appels ciblés, traçables et désactivés par défaut. |
-| Applications | Préparer CV et dossiers depuis les faits du profil ; suivre les états et réponses ; exiger une validation humaine avant tout envoi. |
+| Applications | Orchestrer la file, préparer CV et dossiers factuels, ouvrir et remplir les formulaires autorisés ; arrêter impérativement avant le dernier clic humain. |
 | CLI | Déclencher progressivement ces traitements locaux et afficher leurs résultats. |
 
 Flux cible :
@@ -58,8 +59,11 @@ Flux cible :
 Sources autorisées → Collectors → Normalizer → Storage (SQLite)
 Profil candidat + offres normalisées → Matcher → résultats dans Storage
 Besoin sémantique explicite → AI optionnelle → analyse tracée dans Storage
-Offres retenues + profil factuel → Applications → préparation
-→ validation humaine → envoi sur plateforme compatible → suivi dans Storage
+Offres retenues + profil factuel → Applications → préparation et file
+→ Playwright local → ouverture automatique et remplissage autorisés
+→ barrière de soumission → navigateur visible et clic humain sur le site
+→ observation d'une confirmation → suivi SQLite
+                   ↘ Extension Chrome optionnelle (session existante)
 ```
 
 Chaque étape conserve les liens avec l'offre source. Filtres, dédoublonnage,
@@ -120,3 +124,37 @@ On ne déduit pas l'appétence pour l'alternance du code NAF. Un indicateur
 lba_potential est activé uniquement si un SIRET LBA rejoint le SIREN,
 et catalog_sources uniquement si la cible déclare un SIREN explicite.
 Pas de liaison floue ni de collecte de dirigeants ou de coordonnées personnelles.
+
+
+## Architecture cible M7 : autonomie avec dernier clic humain
+
+Spécification, **non implémentée**. Le collecteur et le matcher alimentent
+une file persistante de candidatures, sans intervention humaine pour trouver
+les annonces. Le moteur Playwright lance les URL des annonces, valide
+leurs destinations, prépare et remplit les formulaires uniquement là où
+l'automatisation est autorisée. L'extension Chrome MV3 reste facultative
+pour les sessions existantes, sans extraction de cookies ni mots de passe.
+
+Composants futurs :
+- ApplicationQueue : file, annulation, reprise, états et idempotence par offre.
+- ApplicationPreparer : CV et réponses factuelles ; LLM facultatif.
+- BrowserRunner : session Playwright isolée, limites de temps et de domaine.
+- SiteAdapters : formulaires testés et autorisés, sans contournement des protections.
+- SubmissionGuard : arrêt fail-closed avant tout submit ou étape équivalente,
+  y compris clavier, formulaire multi-pages ou script déclenché par automation.
+- ApplicationObserver : preuve explicite après clic humain ; sinon à confirmer.
+- ChromeExtension : permissions minimales, connexion locale authentifiée,
+  aucune capacité de soumission automatique.
+
+États : discovered → matched → queued → prepared → filling →
+ready_for_human_submit → submitted_confirmed. Autres issues : blocked,
+needs_manual_action, unconfirmed, cancelled, failed. Remplir un formulaire
+ne signifie jamais l'avoir envoyé.
+
+Une validation humaine est toujours individuelle et faite directement
+sur le bouton « Envoyer » du site dans une fenêtre visible. Aucune API
+de soumission automatique n'est prévue. Le backend local doit rester sur
+loopback, contrôler les origines, les droits et les journaux sensibles ;
+ni profil Chrome ni secrets de session n'y sont copiés.
+
+Spécification complète : [APPLICATION_AUTOMATION.md](APPLICATION_AUTOMATION.md).

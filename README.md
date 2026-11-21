@@ -3,9 +3,11 @@
 Agent Python de recherche, d'analyse et de préparation de candidatures à des
 offres d'emploi et d'alternance. **SCRIPT FIRST, AI ONLY WHEN NECESSARY.**
 
-Le MVP visera les alternances en IA, cybersécurité et blockchain, principalement
-dans les grands groupes. **M0 fournit le socle local ; M1 ajoute la collecte
-Greenhouse et SQLite.** Aucun LLM, scraping ou envoi de candidature.
+Le projet cible les alternances IA, cybersécurité et blockchain, en priorité
+dans les grands groupes. Le bot recherche, collecte et classe des offres depuis
+des sources autorisées. **Objectif M7 non implémenté : il ouvrira et remplira
+lui-même les candidatures compatibles, puis s'arrêtera avant « Envoyer ».
+Le clic final reste toujours humain.**
 
 ## Installation et démarrage
 
@@ -273,3 +275,25 @@ Les colonnes sauvegardées se limitent à raison sociale, SIREN, activité,
 taille d'entreprise, commune et code postal du siège ; aucun dirigeant,
 adresse postale précise ou email n'est stocké. Les sociétés trouvées ne
 sont pas nécessairement en recrutement. Aucun envoi de candidature.
+
+
+## Candidatures autonomes : objectif M7 (non implémenté)
+
+Le mode cible ne demande **aucune recherche ou ouverture manuelle d'annonce** :
+AI Job Hunter collecte les offres, élimine les doublons, classe, sélectionne,
+prépare CV et réponses, puis ouvre seul la page de candidature avec Playwright,
+moteur principal, et remplit les formulaires autorisés.
+
+Quand tout est prêt, le navigateur devient visible : **l'automatisation
+s'arrête avant « Envoyer » et l'utilisateur clique lui-même sur ce bouton
+pour chaque candidature**. Le bot vérifie ensuite la confirmation de la
+plateforme et suit la candidature ; sans confirmation elle reste « à confirmer ».
+
+L'extension Chrome sera un complément pour les sessions existantes, pas une
+obligation de rechercher les annonces manuellement. Les sites qui interdisent
+le remplissage automatisé restent en mode préparation / assistance. CAPTCHA,
+MFA et autres protections ne sont pas contournés. Aucun envoi automatique,
+aucun clic final par le bot et aucune soumission groupée.
+
+La réalisation est prévue en étapes M7.1 à M7.6. Pour les règles, l'architecture,
+les états et les tests : [docs/APPLICATION_AUTOMATION.md](docs/APPLICATION_AUTOMATION.md).
