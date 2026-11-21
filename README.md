@@ -246,3 +246,30 @@ sans LLM ni requête HTTP. Les trois catégories sont match, review, excluded ;
 entreprise, titre et localisation identiques sont regroupés en lecture
 (IDs conservés ; --no-dedup les réaffiche), jamais supprimés.
 Les entreprises LBA à potentiel ne sont pas des offres et restent hors classement.
+
+## M4 — Découverte d'entreprises françaises (à valider)
+
+API officielle sans clé : https://recherche-entreprises.api.gouv.fr/docs/ .
+Recherches ciblées depuis examples/company-search.toml ; 20 recherches et
+5 pages maximum par requête, 25 résultats/page, intervalle ≥ 0,3 s.
+Une recherche textuelle peut sélectionner des établissements d'un département
+même lorsque le siège social est ailleurs. Le catalogue d'entreprises
+n'est donc ni exhaustif, ni une liste de recruteurs confirmés.
+
+~~~bash
+uv run ajh companies discover --file examples/company-search.toml
+uv run ajh companies stats
+uv run ajh companies list --limit 20
+uv run ajh companies list --catalog examples/catalog.toml
+~~~
+
+La table SQLite company_targets est indépendante de jobs et de
+lba_recruiters. Les sociétés sont identifiées par leur SIREN officiel.
+Le lien avec les entreprises à potentiel LBA utilise le préfixe SIREN
+du SIRET public. Le lien vers un catalogue de carrières n'a lieu que si
+un champ siren a été explicitement vérifié et renseigné dans [[targets]].
+Aucun rapprochement flou par nom et aucune recherche de contacts privés.
+Les colonnes sauvegardées se limitent à raison sociale, SIREN, activité,
+taille d'entreprise, commune et code postal du siège ; aucun dirigeant,
+adresse postale précise ou email n'est stocké. Les sociétés trouvées ne
+sont pas nécessairement en recrutement. Aucun envoi de candidature.

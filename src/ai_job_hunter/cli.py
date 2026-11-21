@@ -19,6 +19,7 @@ from ai_job_hunter.lba import collect_lba, list_recruiters, count_recruiters
 from ai_job_hunter.catalog import load_catalog, catalog_settings
 from ai_job_hunter.imports import import_jobs
 from ai_job_hunter.matcher import load_profile, rank_jobs, match_dict, STATES
+from ai_job_hunter.company_discovery import load_searches, discover, company_rows, company_stats
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -58,6 +59,34 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "companies":
+            if args.companies_command == "discover":
+                settings = load_searches(args.file)
+                with JobStore(config.database_path) as store, httpx.Client(
+                    timeout=settings.timeout_seconds, follow_redirects=False,
+                    headers={"User-Agent": "AI-Job-Hunter/0.1 (public company search API)",
+                             "Accept": "application/json"},
+                ) as client:
+                    report = discover(settings, store, client)
+                counts = report.counts
+                print(f"Requêtes : {report.requests} | Reçues : {report.received} | "
+                      f"Nouvelles : {counts.new} | Mises à jour : {counts.updated} | "
+                      f"Inchangées : {counts.unchanged} | Doublons : {report.duplicates} | "
+                      f"Erreurs : {len(report.errors)}")
+                for message in report.warnings:
+                    print(f"[WARN] {message}")
+                for message in report.errors:
+                    print(f"[FAIL] {message}")
+                return 1 if report.errors else 0
+            linked_catalog = load_catalog(args.catalog) if args.catalog else ()
+            with JobStore(config.database_path) as store:
+                if args.companies_command == "stats":
+                    print(json.dumps(company_stats(store, catalog=linked_catalog), ensure_ascii=False))
+                else:
+                    from itertools import islice
+                    for item in islice(company_rows(store, catalog=linked_catalog), args.limit):
+                        print(json.dumps(item, ensure_ascii=False))
+            return 0
         if args.command == "catalog":
             for target in load_catalog(args.file):
                 print(json.dumps(asdict(target), ensure_ascii=False))
@@ -186,10 +215,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     matching.add_argument("--limit", type=_positive_limit, default=20)
     matching.add_argument("--stats", action="store_true", help="bilan de toutes les catégories")
     matching.add_argument("--no-dedup", action="store_true", help="ne pas regrouper les doublons intersources")
+    companies = commands.add_parser("companies", help="découvrir et qualifier les entreprises françaises")
+    company_commands = companies.add_subparsers(dest="companies_command", required=True)
+    company_discover = company_commands.add_parser("discover", help="rechercher via l’API publique Recherche d’Entreprises")
+    company_discover.add_argument("--file", type=Path, required=True, help="requêtes de recherche TOML")
+    company_list = company_commands.add_parser("list", help="cibles légales en JSON Lines")
+    company_list.add_argument("--limit", type=_positive_limit, default=20)
+    company_list.add_argument("--catalog", type=Path, help="lier les entreprises par SIREN déclaré")
+    company_stats_parser = company_commands.add_parser("stats", help="bilan des entreprises découvertes")
+    company_stats_parser.add_argument("--catalog", type=Path, help="lier les entreprises par SIREN déclaré")
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0

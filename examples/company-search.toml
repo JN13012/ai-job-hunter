@@ -1,0 +1,23 @@
+# Requêtes textuelles ciblées. Aucun SIREN individuel ni extraction exhaustive.
+# Les filtres département peuvent correspondre à un établissement autre que le siège.
+[discovery]
+per_page = 20
+interval_seconds = 0.5
+timeout_seconds = 20
+
+[[searches]]
+q = "informatique"
+departement = "13"
+code_naf = "62.02A"
+max_pages = 2
+
+[[searches]]
+q = "cybersécurité"
+departement = "13"
+max_pages = 2
+
+[[searches]]
+q = "logiciel"
+departement = "06"
+code_naf = "62.01Z"
+max_pages = 2

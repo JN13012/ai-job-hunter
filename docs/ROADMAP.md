@@ -12,7 +12,7 @@ en priorité, France et zones géographiques configurables.
 | M2.2 | La Bonne Alternance : accès officiel, offres et entreprises à potentiel — implémentation à valider |
 | M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
-| M4 | Identification d'entreprises cibles (SIRENE et sources autorisées) |
+| M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | Contacts de recrutement professionnels publiés, provenance et minimisation |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
 | M7 | Préparation et envoi supervisé, preuve d'envoi, prévention des doublons |

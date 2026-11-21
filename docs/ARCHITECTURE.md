@@ -108,3 +108,15 @@ migration. Regroupement strict de doublons intersources en lecture uniquement.
 Les offres SmartRecruiters sans description sont à vérifier (sauf exclusion
 explicite). Enrichissement ciblé, conservation des anciens détails, filtrage
 des dates et niveaux de diplôme restent à développer. Validation locale requise.
+
+## M4 — Découverte d'entreprises
+
+company_discovery.py : client GET borné de l'API publique Recherche
+d'Entreprises, recherche textuelle explicitement ciblée, pagination plafonnée,
+filtres administratifs (actives et hors entrepreneurs individuels), rythme
+réduit et arrêt sans retry sur 429. Les données sont enregistrées dans
+company_targets (SIREN unique), table additive à SQLite, sans altérer jobs.
+On ne déduit pas l'appétence pour l'alternance du code NAF. Un indicateur
+lba_potential est activé uniquement si un SIRET LBA rejoint le SIREN,
+et catalog_sources uniquement si la cible déclare un SIREN explicite.
+Pas de liaison floue ni de collecte de dirigeants ou de coordonnées personnelles.

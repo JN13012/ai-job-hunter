@@ -33,6 +33,7 @@ class Target:
     career_url: str
     source: str
     board_token: str | None = None
+    siren: str | None = None
 
 
 def load_catalog(path: Path) -> tuple[Target, ...]:
@@ -44,7 +45,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
     targets = []
     identities = set()
     for entry in entries:
-        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token"}:
+        if not isinstance(entry, dict) or entry.keys() - {"company", "career_url", "source", "board_token", "siren"}:
             raise ValueError("Entrée de catalogue invalide.")
         company, source = entry.get("company"), entry.get("source")
         if not isinstance(company, str) or not company.strip():
@@ -53,6 +54,9 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
             raise ValueError("Source du catalogue inconnue.")
         url = public_url(entry.get("career_url"))
         token = entry.get("board_token")
+        siren = entry.get("siren")
+        if siren is not None and (not isinstance(siren, str) or not re.fullmatch(r"\d{9}", siren)):
+            raise ValueError("SIREN de catalogue invalide.")
         if source == "manual":
             if token is not None:
                 raise ValueError("Une cible manuelle ne peut pas avoir de board_token.")
@@ -68,7 +72,7 @@ def load_catalog(path: Path) -> tuple[Target, ...]:
         if identity in identities:
             raise ValueError("Cible dupliquée dans le catalogue.")
         identities.add(identity)
-        targets.append(Target(company.strip(), url, source, token))
+        targets.append(Target(company.strip(), url, source, token, siren))
     return tuple(targets)
 
 
