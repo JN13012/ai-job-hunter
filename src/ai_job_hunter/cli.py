@@ -27,6 +27,7 @@ from ai_job_hunter.channel_routing import route_jobs, route_companies
 from ai_job_hunter.candidate import load_candidate
 from ai_job_hunter.application_drafts import prepare_job
 from ai_job_hunter.ai_suggestions import TokenBudget, propose_rewrite
+from ai_job_hunter.application_queue import ApplicationQueue
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -66,6 +67,31 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "queue":
+            with JobStore(config.database_path) as store:
+                queue = ApplicationQueue(store, config.data_dir)
+                if args.queue_command == "add":
+                    result = queue.enqueue(args.draft)
+                elif args.queue_command == "list":
+                    result = queue.list(args.limit)
+                elif args.queue_command == "stats":
+                    result = queue.stats()
+                elif args.queue_command == "events":
+                    result = queue.events(args.id, args.limit)
+                elif args.queue_command == "cancel":
+                    result = queue.cancel(args.id)
+                elif args.queue_command == "recover":
+                    result = queue.recover(args.id)
+                elif args.queue_command == "resume":
+                    result = queue.resume(args.id)
+                else:
+                    raise ValueError("Commande de file non reconnue.")
+                if isinstance(result, list):
+                    for item in result:
+                        print(json.dumps(item, ensure_ascii=False))
+                else:
+                    print(json.dumps(result, ensure_ascii=False))
+            return 0
         if args.command == "prepare":
             with JobStore(config.database_path) as store:
                 candidate = load_candidate(args.candidate)
@@ -394,10 +420,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     rewriting.add_argument("--draft", type=Path, required=True, help="dossier généré sous .ajh/drafts")
     rewriting.add_argument("--model", required=True, help="modèle Ollama local déjà installé")
     rewriting.add_argument("--token-budget", type=_positive_limit, default=1000)
+    queue_parser = commands.add_parser("queue", help="file locale M7.1, sans soumission")
+    queue_commands = queue_parser.add_subparsers(dest="queue_command", required=True)
+    queue_add = queue_commands.add_parser("add", help="ajouter un dossier M6 non soumis")
+    queue_add.add_argument("--draft", required=True, type=Path)
+    queue_listing = queue_commands.add_parser("list", help="lister les candidatures en file")
+    queue_listing.add_argument("--limit", type=_positive_limit, default=20)
+    queue_commands.add_parser("stats", help="compter les états de la file")
+    queue_events = queue_commands.add_parser("events", help="historique minimal d'une candidature")
+    queue_events.add_argument("--id", required=True)
+    queue_events.add_argument("--limit", type=_positive_limit, default=20)
+    for operation in ("cancel", "recover", "resume"):
+        cmd = queue_commands.add_parser(operation, help="transition explicite de la file")
+        cmd.add_argument("--id", required=True)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
