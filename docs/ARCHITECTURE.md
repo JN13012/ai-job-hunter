@@ -178,3 +178,16 @@ explicitement déclarés et rattachés au SIREN d'une entreprise M4.
 Les entrées sont persistées via le registre M5.1 : déduplication, statut
 `pending` et maintien des oppositions. Une URL déclarée ne prouve pas
 que le formulaire existe ou autorise une automatisation.
+
+## M5.3 — Découverte explicite des canaux RH
+
+`contact_discovery.py` fonctionne sur la liste de cibles `manual` du catalogue
+avec opt-in, provenance et SIREN. Par défaut, `contacts discover` effectue
+un diagnostic sans réseau. Une fois `--fetch` demandé, il lit `robots.txt`,
+puis uniquement la page carrière déclarée, en GET HTTPS sans redirection,
+sans JavaScript, login ni exploration récursive. Chaque réponse est plafonnée.
+Le parseur HTML ne retient que les ancres vers un formulaire de candidature
+spontanée (même domaine) et les boîtes de recrutement génériques explicitement
+liées ; il ignore les emails nominatifs. L'enregistrement optionnel réutilise
+la persistance et la revue `pending` de M5.1, sans envoi. Les blocages et
+approbations existants sont conservés si les données sont inchangées.

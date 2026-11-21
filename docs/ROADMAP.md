@@ -13,7 +13,7 @@ en priorité, France et zones géographiques configurables.
 | M2.3 | Catalogue ATS et cibles manuelles, import JSON local autorisé — implémentation à valider ; ingestion directe d'alertes et connecteurs spécifiques différés |
 | M3 | Filtres déterministes, scoring explicable, sélection, regroupement strict intersources — implémentation à valider ; dates/diplômes et enrichissement ciblé différés |
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
-| M5 | M5.1 registre sourcé (202 tests validés), M5.2 qualification statique des formulaires déclarés (à tester), M5.3–M5.4 à développer |
+| M5 | M5.1 registre sourcé validé ; M5.2 et M5.3 (analyse opt-in d'une page) implémentés à tester ; M5.4 à développer |
 | M6 | CV et messages factuels, templates, LLM optionnel, cache et budget |
 | M7 | Navigation et remplissage autonomes sur sites autorisés, dernier clic « Envoyer » réservé à l'utilisateur |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
@@ -85,3 +85,14 @@ Le catalogue accepte `application_form_url` facultatif : HTTPS, même hôte que
 et formulaire explicitement déclaré peuvent être inscrites en contacts M5.1
 avec statut `pending`, jamais `approved` automatiquement. Ni réseau ni envoi.
 Les URLs ATS par offre ne sont pas assimilées à des formulaires spontanés.
+
+#### M5.3 — Découverte opt-in limitée
+
+Le module `contact_discovery.py` inspecte au maximum une page par entreprise,
+sous condition de permission explicite dans le catalogue (`allow_contact_scan = true`
+et `permission_note`). Le SIREN doit être connu de M4. Vérification robots.txt,
+GET HTTPS, aucun suivi de redirection, pas d'exploration de liens, limitation
+de requêtes et de taille, aucune adresse email reconstruite. Seuls des
+liens de candidature spontanée ou boîtes de recrutement génériques publiées
+sont proposés. `--fetch` active les accès HTTP ; `--register` les inscrit en
+attente, sans approbation ni envoi. Les données ne sont pas vérifiées en réel.

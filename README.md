@@ -332,3 +332,20 @@ uv run ajh contacts list --status pending
 La seconde commande inscrit seulement les formulaires déclarés dans le registre
 de contacts, sans validation automatique, collecte réseau ou envoi. Voir
 [docs/CONTACTS.md](docs/CONTACTS.md).
+
+## M5.3 — Découverte limitée de canaux RH (à tester)
+
+Le bot peut consulter **une seule page carrière explicitement autorisée**
+par entreprise pour proposer les boîtes RH génériques et liens de candidature
+spontanée visibles dans les ancres HTML. Aucun crawl, profil social, email
+deviné ou candidature envoyée. La lecture réseau est désactivée par défaut.
+
+```bash
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml --fetch
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml --fetch --register
+```
+
+Le catalogue requiert `allow_contact_scan = true`, `permission_note` et un
+SIREN M4 connu ; `--register` conserve les canaux en attente de revue.
+Voir [docs/CONTACTS.md](docs/CONTACTS.md) pour les garde-fous.

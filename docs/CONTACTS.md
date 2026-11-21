@@ -1,6 +1,6 @@
 # M5 — Contacts de recrutement professionnels
 
-Statut : M5.1 validé localement (202 tests), M5.2 implémenté à tester ; M5.3–M5.4 à développer.
+Statut : M5.1 validé localement (202 tests), M5.2 implémenté à tester ; M5.3 implémenté à tester ; M5.4 à développer.
 
 ## Objectif
 
@@ -15,7 +15,7 @@ automatique de contacts, ni scraping, ni envoi de candidature.
 | --- | --- | --- |
 | M5.1 | Registre SQLite, import JSON, source HTTPS, SIREN M4, déduplication, approbation et opposition | À tester |
 | M5.2 | Qualification statique de formulaires déclarés, sans exploration de site | Implémenté, à tester |
-| M5.3 | Recherche de canaux via API ou sources explicitement autorisées, avec limites de fréquence | À étudier par site |
+| M5.3 | Analyse opt-in d'une page carrière autorisée, extraction des liens RH explicites | Implémenté, à tester |
 | M5.4 | Classement et transmission des canaux vérifiés aux dossiers M6/M7 | À développer |
 
 ## Schéma et contraintes
@@ -90,3 +90,38 @@ avec SIREN présent dans M4 sont inscrits, toujours en attente de contrôle.
 Les URL de candidature par offre ATS ne sont pas promues en canaux génériques.
 Les formulaires sur hôte tiers exigent un import manuel avec provenance propre.
 Aucune connexion réseau, détection DOM ou soumission n'est effectuée.
+
+## M5.3 — Analyse opt-in d'une page carrière
+
+Ajouter dans une cible `[[targets]]` de type `manual` ayant un SIREN M4 :
+
+```toml
+allow_contact_scan = true
+permission_note = "Autorisation documentée de consulter cette page carrières."
+```
+
+Ne renseigner ces champs que lorsqu'un accès automatisé en lecture est
+expressément permis. La commande sans `--fetch` liste simplement les
+cibles éligibles et **n'effectue aucune requête**.
+
+```bash
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml --fetch
+uv run ajh contacts discover --file .ajh/mon-catalogue.toml --fetch --register
+uv run ajh contacts list --status pending
+```
+
+L'analyse consulte `robots.txt`, puis seulement la page exacte de carrière,
+avec 2 requêtes GET au plus par cible, espacées d'au moins 2 secondes.
+Maximum 10 pages par lancement, 1 Mio HTML et 64 Kio robots ; pas de
+redirection, recherche de liens secondaires ou soumission. Seules les ancres
+HTML `mailto:` vers des boîtes de recrutement génériques et celles dont le
+libellé désigne clairement une candidature spontanée sont proposées. Les
+formulaires affichés par JavaScript, les liens vers des domaines externes
+et les contacts RH nominatifs sont exclus à ce stade. Si `--register` est
+présent, les résultats restent `pending`, jamais `approved` automatiquement.
+
+**Limites :** extraction heuristique à vérifier, pages HTML statiques seulement.
+La vérification `robots.txt` ne constitue pas une permission contractuelle ;
+la preuve `permission_note` reste déclarative. Le code ne prétend pas
+garantir la compatibilité de tous les sites ou la qualité des canaux.
