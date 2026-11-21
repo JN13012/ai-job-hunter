@@ -386,3 +386,21 @@ uv run ajh rewrite --draft .ajh/drafts/NOM_DOSSIER --model llama3.2:3b --token-b
 
 La suggestion IA est distincte et doit être relue ; le document original
 n'est pas remplacé. Voir [docs/AI_SECURITY.md](docs/AI_SECURITY.md).
+
+## M7.1 — File d'attente persistante (à tester)
+
+Les dossiers M6 restent locaux et ne sont pas soumis. La file ajoute une
+réservation exclusive, un journal d'états et la reprise explicite après une
+interruption. Aucun navigateur et aucun envoi à ce stade.
+
+```bash
+uv run ajh queue add --draft .ajh/drafts/NOM_DU_DOSSIER
+uv run ajh queue list
+uv run ajh queue stats
+uv run ajh queue events --id IDENTIFIANT
+uv run ajh queue cancel --id IDENTIFIANT
+```
+
+`recover` et `resume` sont réservés à la gestion d'une interruption après
+vérification de l'arrêt effectif du worker. Spécification :
+[docs/APPLICATION_QUEUE.md](docs/APPLICATION_QUEUE.md).

@@ -211,3 +211,15 @@ factuels à partir du profil et du routage M5.4. Les fichiers sont placés sous
 propose un changement éditorial local via Ollama, budget token plafonné et
 cache dans .ajh/llm_cache. Pas d'envoi ni de remplissage navigateur.
 Voir [AI_SECURITY.md](AI_SECURITY.md).
+
+## M7.1 — Orchestration locale préparatoire
+
+`application_queue.py` ajoute trois tables SQLite indépendantes :
+`application_queue`, `application_job_aliases`, `application_queue_events`.
+Le code gère `enqueue`, `claim`, `renew`, `release`, `cancel`, `recover`
+et `resume` avec transactions `BEGIN IMMEDIATE`, jetons aléatoires et
+événements dépourvus de données de CV. Les fichiers M6 sont revalidés avec
+empreinte SHA-256 avant attribution et les contacts sont revérifiés.
+L'expiration d'un bail n'entraîne aucun transfert automatique de responsabilité.
+Playwright et les appels de soumission sont hors périmètre M7.1. Détails :
+[APPLICATION_QUEUE.md](APPLICATION_QUEUE.md).

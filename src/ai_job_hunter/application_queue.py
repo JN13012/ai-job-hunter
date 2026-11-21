@@ -293,7 +293,7 @@ class ApplicationQueue:
     def claim(
         self, worker: str, *, seconds: int = 300, now: datetime | None = None,
     ) -> dict | None:
-        if not WORKER.fullmatch(worker):
+        if not isinstance(worker, str) or not WORKER.fullmatch(worker):
             raise ValueError("Identifiant worker invalide.")
         if type(seconds) is not int or not 30 <= seconds <= 3600:
             raise ValueError("Bail entre 30 et 3600 secondes requis.")
