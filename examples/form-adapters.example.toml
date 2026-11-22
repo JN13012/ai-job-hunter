@@ -1,0 +1,25 @@
+# Fixture illustrative : n'activer que sur un formulaire autorisé.
+[[adapter]]
+id = "example_application"
+host = "jobs.example.org"
+path_prefix = "/apply"
+form_id = "application"
+permission_note = "Permission spécifique pour ce formulaire de démonstration."
+
+[[adapter.field]]
+name = "full_name"
+tag = "input"
+source = "identity.full_name"
+required = true
+
+[[adapter.field]]
+name = "email"
+tag = "input"
+source = "identity.email"
+required = true
+
+[[adapter.field]]
+name = "motivation"
+tag = "textarea"
+source = "application.motivation"
+required = false
