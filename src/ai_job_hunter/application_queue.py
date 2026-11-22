@@ -314,12 +314,15 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
-            query = (
-                "SELECT * FROM application_queue WHERE status='queued' "
-                "AND id NOT IN (SELECT application_id FROM submission_handoffs "
-                "WHERE status IN ('awaiting_manual_action','clicked_unconfirmed',"
-                "'submitted_confirmed','abandoned')) "
-            )
+            query = "SELECT * FROM application_queue WHERE status='queued' "
+            tracking_exists = self.store.connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='submission_handoffs'"
+            ).fetchone() is not None
+            if tracking_exists:
+                query += (
+                    "AND id NOT IN (SELECT application_id FROM submission_handoffs) "
+                )
             if browser_only:
                 query += "AND channel_kind IN ('offer_link','company_form') "
             rows = self.store.connection.execute(
@@ -465,7 +468,11 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
-            if self.store.connection.execute(
+            tracking_exists = self.store.connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='submission_handoffs'"
+            ).fetchone() is not None
+            if tracking_exists and self.store.connection.execute(
                 "SELECT 1 FROM submission_handoffs WHERE application_id=?", (app_id,),
             ).fetchone():
                 raise ValueError("Transfert humain déjà commencé : reprise automatique interdite.")
