@@ -22,6 +22,7 @@ SOURCES = frozenset({
     "application.motivation",
 })
 TAGS = frozenset(("input", "textarea", "select"))
+DOCUMENT_KINDS = frozenset(("cv", "letter"))
 MAX_BYTES = 65536
 
 
@@ -39,6 +40,17 @@ class FieldBinding:
 
 
 @dataclass(frozen=True)
+class UploadBinding:
+    name: str
+    document: str
+    required: bool
+
+    @property
+    def selector(self) -> str:
+        return f'input[type="file"][name="{self.name}"]'
+
+
+@dataclass(frozen=True)
 class FormAdapter:
     id: str
     host: str
@@ -46,6 +58,7 @@ class FormAdapter:
     form_id: str
     permission_note: str
     fields: tuple[FieldBinding, ...]
+    uploads: tuple[UploadBinding, ...] = ()
 
     def accepts(self, url: str) -> bool:
         host, path, _ = _canonical_url(url)
@@ -74,8 +87,12 @@ class AdapterCatalog:
         seen = set()
         for item in items:
             expected = {"id", "host", "path_prefix", "form_id", "permission_note", "field"}
-            if not isinstance(item, dict) or item.keys() != expected:
+            if (not isinstance(item, dict) or not expected.issubset(item)
+                    or item.keys() - (expected | {"upload"})):
                 raise ValueError("Adaptateur : propriétés attendues invalides.")
+            uploads_raw = item.get("upload", [])
+            if not isinstance(uploads_raw, list) or len(uploads_raw) > 2:
+                raise ValueError("Maximum deux pièces jointes déclarées.")
             adapter_id, form_id = item["id"], item["form_id"]
             if not isinstance(adapter_id, str) or not ADAPTER_ID.fullmatch(adapter_id):
                 raise ValueError("Identifiant d'adaptateur invalide.")
@@ -115,13 +132,28 @@ class AdapterCatalog:
                     raise ValueError("Un nom de champ ne peut apparaître qu'une fois.")
                 found.add(name)
                 parsed.append(FieldBinding(name, tag, source, required))
+            uploads = []
+            used_docs = set()
+            for entry in uploads_raw:
+                if not isinstance(entry, dict) or entry.keys() != {
+                    "name", "document", "required"
+                }:
+                    raise ValueError("Déclaration de pièce jointe invalide.")
+                name, doc, required = entry["name"], entry["document"], entry["required"]
+                if (not isinstance(name, str) or not IDENTIFIER.fullmatch(name)
+                        or doc not in DOCUMENT_KINDS or type(required) is not bool
+                        or name in found or doc in used_docs):
+                    raise ValueError("Pièce jointe dupliquée ou non autorisée.")
+                found.add(name)
+                used_docs.add(doc)
+                uploads.append(UploadBinding(name, doc, required))
             identity = (host, prefix)
             if adapter_id in seen or identity in seen:
                 raise ValueError("Adaptateur ou chemin dupliqué.")
             seen.add(adapter_id)
             seen.add(identity)
             adapters.append(FormAdapter(
-                adapter_id, host, prefix, form_id, note.strip(), tuple(parsed),
+                adapter_id, host, prefix, form_id, note.strip(), tuple(parsed), tuple(uploads),
             ))
         return cls(tuple(adapters))
 

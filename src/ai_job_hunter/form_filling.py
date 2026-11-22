@@ -15,7 +15,8 @@ from ai_job_hunter.application_queue import ApplicationQueue
 from ai_job_hunter.browser_preview import (
     BrowserPolicy, CleanupUncertain, NavigationDenied, show_visible_page,
 )
-from ai_job_hunter.candidate import Candidate, load_candidate
+from ai_job_hunter.candidate import Candidate
+from ai_job_hunter.attachment_documents import read_bundle
 from ai_job_hunter.form_adapters import AdapterCatalog, FormAdapter
 
 
@@ -56,7 +57,10 @@ def field_values(candidate: Candidate, answers: dict, adapter: FormAdapter) -> d
     return mapped
 
 
-def fill_known_fields(page, adapter: FormAdapter, values: dict[str, str]) -> int:
+def fill_known_fields(
+    page, adapter: FormAdapter, values: dict[str, str],
+    uploads: dict[str, Path] | None = None,
+) -> int:
     """Preflight the *entire* form before changing a single field.
 
     Unknown writable controls, hidden unexpected forms, contenteditable,
@@ -72,6 +76,10 @@ def fill_known_fields(page, adapter: FormAdapter, values: dict[str, str]) -> int
         raise FormMismatch("Éditeurs contenteditable non pris en charge.")
     # Fail closed on any interactive controls not explicitly modeled.
     allowed_names = {binding.name for binding in adapter.fields}
+    upload_names = {binding.name for binding in adapter.uploads}
+    upload_files = uploads or {}
+    if set(upload_files) - upload_names:
+        raise FormMismatch("Pièce jointe non déclarée dans l'adaptateur.")
     controls = form.locator("input,textarea,select,button")
     if controls.count() > 60:
         raise FormMismatch("Trop de contrôles HTML.")
@@ -83,6 +91,10 @@ def fill_known_fields(page, adapter: FormAdapter, values: dict[str, str]) -> int
             continue  # Never interact; excluded from writable-field accounting.
         if tag == "input" and typ == "hidden":
             continue  # A static CSRF field may exist but is never modified.
+        if tag == "input" and typ == "file":
+            if control.get_attribute("name") not in upload_names:
+                raise FormMismatch("Champ de fichier non déclaré.")
+            continue
         if tag == "input" and typ not in ALLOWED_INPUT_TYPES:
             raise FormMismatch("Case à cocher, radio, pièce jointe ou contrôle spécial non autorisé.")
         if tag not in ("input", "textarea", "select"):
@@ -112,13 +124,36 @@ def fill_known_fields(page, adapter: FormAdapter, values: dict[str, str]) -> int
                 if values[binding.name] not in options:
                     raise FormMismatch("Valeur de liste absente des choix du site.")
             operations.append((binding, control, values[binding.name]))
-    # No dispatch of click, press, submit, select_next or Enter.
+    # Preflight all file controls before any actual DOM changes.
+    file_operations = []
+    for attachment in adapter.uploads:
+        control = form.locator(attachment.selector)
+        if control.count() != 1 or not control.is_enabled():
+            raise FormMismatch("Champ de pièce jointe absent ou désactivé.")
+        if control.get_attribute("multiple") is not None:
+            raise FormMismatch("Téléversement multiple interdit.")
+        accept = (control.get_attribute("accept") or "").strip().casefold()
+        if accept and not any(
+            token.strip() in (".pdf", "application/pdf") for token in accept.split(",")
+        ):
+            raise FormMismatch("Type PDF non accepté par le site.")
+        file = upload_files.get(attachment.name)
+        if file is None:
+            if attachment.required:
+                raise FormMismatch("Pièce jointe obligatoire absente.")
+            continue
+        if file.suffix.casefold() != ".pdf" or file.is_symlink() or not file.is_file():
+            raise FormMismatch("Document PDF non vérifié.")
+        file_operations.append((control, file))
+    # No click, press, submit, Enter, file chooser or navigation.
     for binding, control, value in operations:
         if binding.tag == "select":
             control.select_option(value=value, timeout=3000)
         else:
             control.fill(value, timeout=3000)
-    return len(operations)
+    for control, file in file_operations:
+        control.set_input_files(str(file), timeout=3000)
+    return len(operations) + len(file_operations)
 
 
 @dataclass(frozen=True)
@@ -173,11 +208,18 @@ def fill_one(
             raise NavigationDenied("Réponses invalides.")
         answers = json.loads(answers_file.read_text(encoding="utf-8"))
         values = field_values(candidate, answers, adapter)
+        upload_map = {}
+        if adapter.uploads:
+            bundle = read_bundle(folder, required=True)
+            upload_map = {
+                attachment.name: bundle[attachment.document].path
+                for attachment in adapter.uploads
+            }
         def after_load(page) -> None:
             nonlocal count
             if heartbeat():
                 raise NavigationDenied("Annulation demandée avant remplissage.")
-            count = fill_known_fields(page, adapter, values)
+            count = fill_known_fields(page, adapter, values, upload_map)
             if heartbeat():
                 raise NavigationDenied("Annulation pendant le remplissage.")
         result = show(url, heartbeat, max_seconds=max_seconds, after_load=after_load)
