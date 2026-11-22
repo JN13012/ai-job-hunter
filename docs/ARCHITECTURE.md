@@ -231,3 +231,13 @@ selon un hôte et chemin déclarés, charge une seule réponse HTML en Chromium
 visible et ferme le navigateur avant de libérer la file. JavaScript et
 ressources secondaires désactivés ; aucune saisie ni soumission.
 Voir [BROWSER_PREVIEW.md](BROWSER_PREVIEW.md).
+
+## M7.3 — Adaptateurs déclaratifs et remplissage statique
+
+`form_adapters.py` lit des correspondances TOML explicites par hôte, chemin
+et identifiant de formulaire ; `form_filling.py` charge les seules données
+prévues dans M6, vérifie tout le formulaire puis remplit les champs avec
+Playwright. Le moteur conserve la session M7.2 : scripts désactivés,
+réseau bloqué hors premier GET, aucun submit ou clic sur bouton. L'aperçu
+est fermé avant de libérer la réservation ; aucun état submitted n'existe.
+Voir [FORM_FILLING.md](FORM_FILLING.md).

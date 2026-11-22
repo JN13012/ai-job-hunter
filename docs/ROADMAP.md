@@ -15,7 +15,7 @@ en priorité, France et zones géographiques configurables.
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | M5.1 validé ; M5.2–M5.4 implémentés, tests M5.2–M5.4 à exécuter |
 | M6 | CV/lettres factuels, réponses déclarées, suggestions Ollama locales avec cache et budget — implémenté, à tester |
-| M7 | M7.1 file persistante et M7.2 aperçu Playwright implémentés à tester ; M7.3–M7.6 à développer |
+| M7 | M7.1–M7.3 implémentés à tester (M7.3 formulaires statiques uniquement) ; M7.4–M7.6 à développer |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
 | M9 | Tableau de bord local : file de candidatures, dossiers prêts, validation humaine et suivi |
 
@@ -131,3 +131,11 @@ Navigation Playwright limitée à un document HTML GET, sans JavaScript ni
 saisie, derrière une politique d'hôtes explicitement autorisés. Le worker
 réserve, vérifie, affiche, puis ferme Chromium avant de libérer la file.
 Voir [BROWSER_PREVIEW.md](BROWSER_PREVIEW.md).
+
+### M7.3 — Adaptateurs statiques de formulaires
+
+Le moteur `form_filling.py` reconnaît un formulaire unique déclaré dans
+`form_adapters.py` et remplit uniquement les champs préautorisés à partir
+des faits M6. Un précontrôle complet interdit tout champ inconnu ou
+spécial. Les boutons, pièces jointes, transitions et soumissions restent
+hors périmètre. Voir [FORM_FILLING.md](FORM_FILLING.md).

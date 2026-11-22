@@ -131,3 +131,10 @@ Aucune automatisation de soumission via HTTP direct n'est prévue.
 5. Le bot s'arrête sans contournement en cas de protection ou de flux
    interdit ; aucun envoi en masse ni duplication.
 6. Le code M7 et les tests sont exécutés localement avant toute fusion.
+
+## M7.3 — Statut intermédiaire
+
+Des adaptateurs déterministes peuvent renseigner des formulaires statiques
+autorisés, en navigateur visible et JavaScript désactivé, sans clic ni
+soumission. Le workflow multi-étapes et les pièces jointes restent
+non implémentés. Voir [FORM_FILLING.md](FORM_FILLING.md).

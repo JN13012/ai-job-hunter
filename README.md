@@ -419,3 +419,21 @@ uv run ajh preview --policy .ajh/browser-policy.toml --max-seconds 180
 
 Sous WSL2, utiliser WSLg. Format fictif : examples/browser-policy.example.toml.
 Documentation : [docs/BROWSER_PREVIEW.md](docs/BROWSER_PREVIEW.md).
+
+## M7.3 — Remplissage contrôlé des formulaires (à tester)
+
+Les formulaires HTML statiques autorisés peuvent être préremplis depuis
+le profil M6 avec des adaptateurs explicitement déclarés. JavaScript
+reste désactivé, les champs inconnus entraînent un arrêt et aucune
+soumission n'est possible via les actions du bot. Les fichiers de test sont
+dans `examples/form-adapters.example.toml` et
+`examples/browser-policy.example.toml`.
+
+```bash
+uv sync --extra browser
+uv run pytest -q
+uv run ajh fill --policy .ajh/browser-policy.toml --adapters .ajh/form-adapters.toml --candidate .ajh/candidate.toml --max-seconds 120
+```
+
+Le navigateur se ferme ensuite ; aucun dossier n'est envoyé. Documentation :
+[docs/FORM_FILLING.md](docs/FORM_FILLING.md).
