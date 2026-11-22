@@ -4,6 +4,8 @@ Aucun navigateur, email, formulaire, POST ou soumission. Le worker M7.2
 consommera des réservations ; seul le clic humain M7.5 soumettra un dossier.
 """
 
+from __future__ import annotations
+
 from datetime import UTC, datetime, timedelta
 import hashlib
 import json
