@@ -138,3 +138,11 @@ Des adaptateurs déterministes peuvent renseigner des formulaires statiques
 autorisés, en navigateur visible et JavaScript désactivé, sans clic ni
 soumission. Le workflow multi-étapes et les pièces jointes restent
 non implémentés. Voir [FORM_FILLING.md](FORM_FILLING.md).
+
+## M7.4 — État intermédiaire
+
+CV et lettres sont générables en PDF local, puis sélectionnables uniquement
+dans les champs de fichiers explicitement déclarés. Les empreintes PDF
+sont vérifiées à chaque réservation et avant le remplissage. Le réseau reste
+bloqué après le GET HTML initial ; aucune soumission n'est effectuée.
+Voir [ATTACHMENTS.md](ATTACHMENTS.md).

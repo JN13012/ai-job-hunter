@@ -437,3 +437,21 @@ uv run ajh fill --policy .ajh/browser-policy.toml --adapters .ajh/form-adapters.
 
 Le navigateur se ferme ensuite ; aucun dossier n'est envoyé. Documentation :
 [docs/FORM_FILLING.md](docs/FORM_FILLING.md).
+
+## M7.4 — CV et lettres PDF, pièces jointes (à tester)
+
+Générer les PDF locaux d'une candidature **avant** de l'ajouter à la file,
+puis vérifier leur intégrité :
+
+```bash
+uv sync --extra browser --extra documents
+uv run ajh documents build --draft .ajh/drafts/NOM_DU_DOSSIER
+uv run ajh documents verify --draft .ajh/drafts/NOM_DU_DOSSIER
+uv run ajh queue add --draft .ajh/drafts/NOM_DU_DOSSIER
+```
+
+Les adaptateurs peuvent cibler un `input type=file` avec les déclarations
+`[[adapter.upload]]`, seulement pour `cv` ou `letter`. Sans déclaration,
+aucune pièce jointe n'est sélectionnée. Le navigateur interdit toujours
+la soumission et n'ouvre qu'une page statique autorisée. Voir
+[docs/ATTACHMENTS.md](docs/ATTACHMENTS.md).

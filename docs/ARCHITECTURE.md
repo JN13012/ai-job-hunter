@@ -241,3 +241,14 @@ Playwright. Le moteur conserve la session M7.2 : scripts désactivés,
 réseau bloqué hors premier GET, aucun submit ou clic sur bouton. L'aperçu
 est fermé avant de libérer la réservation ; aucun état submitted n'existe.
 Voir [FORM_FILLING.md](FORM_FILLING.md).
+
+## M7.4 — PDF locaux et liaison au formulaire
+
+`attachment_documents.py` génère `cv.pdf` et `letter.pdf` à partir des
+brouillons Markdown M6, avec ReportLab optionnel. `attachments.json`
+conserve les empreintes SHA-256 des Markdown et PDF. La file M7.1 inclut
+le bundle dans l'empreinte de réservation et vérifie les fichiers avant
+chaque claim. `form_adapters.py` ajoute des correspondances d'upload
+explicites ; `form_filling.py` choisit seulement les PDF vérifiés,
+sans soumettre le formulaire. Les fichiers restent privés sous `.ajh`.
+Voir [ATTACHMENTS.md](ATTACHMENTS.md).

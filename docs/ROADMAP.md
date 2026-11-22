@@ -15,7 +15,7 @@ en priorité, France et zones géographiques configurables.
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | M5.1 validé ; M5.2–M5.4 implémentés, tests M5.2–M5.4 à exécuter |
 | M6 | CV/lettres factuels, réponses déclarées, suggestions Ollama locales avec cache et budget — implémenté, à tester |
-| M7 | M7.1–M7.3 implémentés à tester (M7.3 formulaires statiques uniquement) ; M7.4–M7.6 à développer |
+| M7 | M7.1–M7.4 implémentés à tester (formulaires statiques et PDF contrôlés) ; M7.5–M7.6 à développer |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
 | M9 | Tableau de bord local : file de candidatures, dossiers prêts, validation humaine et suivi |
 
@@ -139,3 +139,12 @@ Le moteur `form_filling.py` reconnaît un formulaire unique déclaré dans
 des faits M6. Un précontrôle complet interdit tout champ inconnu ou
 spécial. Les boutons, pièces jointes, transitions et soumissions restent
 hors périmètre. Voir [FORM_FILLING.md](FORM_FILLING.md).
+
+### M7.4 — Gestion des pièces jointes
+
+Le module `attachment_documents.py` convertit les brouillons M6 en PDF
+A4 sans service externe et associe les fichiers à leurs SHA-256. La file
+M7.1 vérifie leur intégrité et bloque les modifications après inscription.
+Les adaptateurs M7.3 peuvent sélectionner uniquement les PDF explicitement
+autorisés dans les champs `input[type=file]`. JavaScript reste désactivé
+et aucune candidature n'est soumise. Voir [ATTACHMENTS.md](ATTACHMENTS.md).
