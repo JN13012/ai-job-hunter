@@ -32,6 +32,7 @@ from ai_job_hunter.browser_preview import BrowserPolicy, preview_one, CleanupUnc
 from ai_job_hunter.form_adapters import AdapterCatalog
 from ai_job_hunter.form_filling import fill_one
 from ai_job_hunter.attachment_documents import build_bundle, read_bundle
+from ai_job_hunter.submission_tracking import SubmissionTracker
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -71,6 +72,39 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "submission":
+            with JobStore(config.database_path) as store:
+                tracker = SubmissionTracker(ApplicationQueue(store, config.data_dir))
+                cmd = args.submission_command
+                if cmd == "handoff":
+                    result = tracker.handoff(args.id, BrowserPolicy.load(args.policy))
+                elif cmd == "clicked":
+                    result = tracker.clicked(args.id)
+                elif cmd == "confirm":
+                    result = tracker.confirm(
+                        args.id, evidence=args.evidence,
+                        evidence_source=args.source,
+                        reference=args.reference,
+                        reviewed=args.reviewed,
+                    )
+                elif cmd == "abandon":
+                    result = tracker.abandon(args.id)
+                elif cmd == "status":
+                    result = tracker.get(args.id)
+                elif cmd == "list":
+                    result = tracker.list(args.limit)
+                elif cmd == "stats":
+                    result = tracker.stats()
+                elif cmd == "events":
+                    result = tracker.events(args.id, args.limit)
+                else:
+                    raise ValueError("Commande de soumission inconnue.")
+                if isinstance(result, list):
+                    for record in result:
+                        print(json.dumps(record, ensure_ascii=False))
+                else:
+                    print(json.dumps(result, ensure_ascii=False))
+            return 0
         if args.command == "documents":
             root = (config.data_dir / "drafts").resolve()
             folder = args.draft
@@ -510,10 +544,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     for action in ("build", "verify"):
         doc_command = documents_commands.add_parser(action)
         doc_command.add_argument("--draft", type=Path, required=True)
+    submission = commands.add_parser(
+        "submission", help="transfert manuel et suivi de confirmations locales ; aucun envoi"
+    )
+    submission_commands = submission.add_subparsers(dest="submission_command", required=True)
+    handoff = submission_commands.add_parser("handoff", help="récupérer l'URL pour action manuelle")
+    handoff.add_argument("--id", required=True)
+    handoff.add_argument("--policy", type=Path, required=True)
+    clicked = submission_commands.add_parser("clicked", help="déclarer un clic humain (non confirmé)")
+    clicked.add_argument("--id", required=True)
+    confirm = submission_commands.add_parser("confirm", help="enregistrer une preuve revue humainement")
+    confirm.add_argument("--id", required=True)
+    confirm.add_argument("--evidence", type=Path, required=True)
+    confirm.add_argument("--source", choices=("confirmation_page", "confirmation_email"), required=True)
+    confirm.add_argument("--reference", required=True)
+    confirm.add_argument("--reviewed", action="store_true", help="attester la revue humaine explicite de la preuve")
+    abandon = submission_commands.add_parser("abandon", help="abandonner un transfert sans clic déclaré")
+    abandon.add_argument("--id", required=True)
+    status = submission_commands.add_parser("status", help="état d'une candidature suivie")
+    status.add_argument("--id", required=True)
+    listing = submission_commands.add_parser("list", help="lister les transferts humains")
+    listing.add_argument("--limit", type=_positive_limit, default=20)
+    submission_commands.add_parser("stats", help="compter les statuts de suivi")
+    events = submission_commands.add_parser("events", help="événements minimaux, sans données personnelles")
+    events.add_argument("--id", required=True)
+    events.add_argument("--limit", type=_positive_limit, default=20)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview", "fill", "documents"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview", "fill", "documents", "submission"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
