@@ -1,0 +1,5 @@
+# Exemple fictif : à adapter uniquement aux sites autorisant le navigateur automatisé.
+[[allow]]
+host = "jobs.example.org"
+path_prefix = "/apply"
+reason = "Permission explicite documentée pour le domaine de test."

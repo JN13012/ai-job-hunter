@@ -404,3 +404,18 @@ uv run ajh queue cancel --id IDENTIFIANT
 `recover` et `resume` sont réservés à la gestion d'une interruption après
 vérification de l'arrêt effectif du worker. Spécification :
 [docs/APPLICATION_QUEUE.md](docs/APPLICATION_QUEUE.md).
+
+## M7.2 — Aperçu Playwright (à tester)
+
+Le worker peut ouvrir une seule candidature depuis la file M7.1 en Chromium
+visible, sous politique d'autorisation explicite. La page est en lecture seule,
+sans JavaScript, sans remplissage ni soumission.
+
+~~~bash
+uv sync --extra browser
+uv run playwright install chromium
+uv run ajh preview --policy .ajh/browser-policy.toml --max-seconds 180
+~~~
+
+Sous WSL2, utiliser WSLg. Format fictif : examples/browser-policy.example.toml.
+Documentation : [docs/BROWSER_PREVIEW.md](docs/BROWSER_PREVIEW.md).

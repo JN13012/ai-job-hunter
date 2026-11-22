@@ -223,3 +223,11 @@ empreinte SHA-256 avant attribution et les contacts sont revérifiés.
 L'expiration d'un bail n'entraîne aucun transfert automatique de responsabilité.
 Playwright et les appels de soumission sont hors périmètre M7.1. Détails :
 [APPLICATION_QUEUE.md](APPLICATION_QUEUE.md).
+
+## M7.2 — Worker d'aperçu Playwright
+
+`browser_preview.py` prend une réservation M7.1, valide la destination
+selon un hôte et chemin déclarés, charge une seule réponse HTML en Chromium
+visible et ferme le navigateur avant de libérer la file. JavaScript et
+ressources secondaires désactivés ; aucune saisie ni soumission.
+Voir [BROWSER_PREVIEW.md](BROWSER_PREVIEW.md).
