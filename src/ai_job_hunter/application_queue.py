@@ -292,6 +292,7 @@ class ApplicationQueue:
 
     def claim(
         self, worker: str, *, seconds: int = 300, now: datetime | None = None,
+        browser_only: bool = False,
     ) -> dict | None:
         if not isinstance(worker, str) or not WORKER.fullmatch(worker):
             raise ValueError("Identifiant worker invalide.")
@@ -300,9 +301,11 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
+            query = "SELECT * FROM application_queue WHERE status='queued' "
+            if browser_only:
+                query += "AND channel_kind IN ('offer_link','company_form') "
             rows = self.store.connection.execute(
-                "SELECT * FROM application_queue WHERE status='queued' "
-                "ORDER BY created_at,id"
+                query + "ORDER BY created_at,id"
             ).fetchall()
             for row in rows:
                 # A changed M6 dossier or contact revocation must fail closed.
@@ -333,6 +336,28 @@ class ApplicationQueue:
                     "reservation_token": token, "worker": worker,
                 }
         return None
+
+    def reserved_destination(self, app_id: str, token: str) -> dict:
+        """Recheck document integrity and contact approval after claim.
+
+        The URL is exposed only to a holder of the exact reservation token;
+        queue listings and events remain free of destination query secrets.
+        """
+        row = self._get(app_id)
+        self._check_reservation(row, token)
+        manifest, digest, key, _ = self._validated(row["draft_name"])
+        if (manifest["job_id"] != row["job_id"]
+                or digest != row["draft_sha256"] or key != row["channel_key"]):
+            raise ValueError("Brouillon ou canal modifié pendant la réservation.")
+        kind = manifest["channel"]["kind"]
+        if kind not in ("offer_link", "company_form"):
+            raise ValueError("Canal navigateur interdit.")
+        return {"kind": kind, "target": manifest["channel"]["target"]}
+
+    def cancellation_requested(self, app_id: str, token: str) -> bool:
+        row = self._get(app_id)
+        self._check_reservation(row, token)
+        return bool(row["cancel_requested"])
 
     def renew(self, app_id: str, token: str, *, seconds: int = 300,
               now: datetime | None = None) -> dict:
