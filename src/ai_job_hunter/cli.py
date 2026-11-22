@@ -31,6 +31,7 @@ from ai_job_hunter.application_queue import ApplicationQueue
 from ai_job_hunter.browser_preview import BrowserPolicy, preview_one, CleanupUncertain
 from ai_job_hunter.form_adapters import AdapterCatalog
 from ai_job_hunter.form_filling import fill_one
+from ai_job_hunter.attachment_documents import build_bundle, read_bundle
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -70,6 +71,32 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "documents":
+            root = (config.data_dir / "drafts").resolve()
+            folder = args.draft
+            if (folder.is_symlink() or folder.resolve().parent != root
+                    or not folder.is_dir()):
+                raise ValueError("Seuls les dossiers M6 directs sous .ajh/drafts sont acceptés.")
+            if args.documents_command == "build":
+                # Do not modify a draft already queued: its SHA-256 is pinned
+                # by M7.1, and this command must not bypass reservation safety.
+                with JobStore(config.database_path) as store:
+                    queue = ApplicationQueue(store, config.data_dir)
+                    if any(row["draft_name"] == folder.name for row in queue.list(limit=1000000)):
+                        raise ValueError("Dossier déjà en file M7.1 : préparer un nouveau dossier.")
+                bundle = build_bundle(folder)
+            else:
+                bundle = read_bundle(folder, required=True)
+            print(json.dumps({
+                "status": "draft_attachments_unsubmitted",
+                "documents": {
+                    kind: {"file": entry.path.name, "sha256": entry.sha256,
+                           "bytes": entry.size}
+                    for kind, entry in bundle.items()
+                },
+                "review_required": True,
+            }, ensure_ascii=False))
+            return 0
         if args.command == "fill":
             policy = BrowserPolicy.load(args.policy)
             adapters = AdapterCatalog.load(args.adapters)
@@ -474,10 +501,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     fill_parser.add_argument("--adapters", type=Path, required=True)
     fill_parser.add_argument("--candidate", type=Path, required=True)
     fill_parser.add_argument("--max-seconds", type=int, default=120)
+    documents_parser = commands.add_parser(
+        "documents", help="générer ou vérifier les PDF locaux, jamais les soumettre"
+    )
+    documents_commands = documents_parser.add_subparsers(
+        dest="documents_command", required=True
+    )
+    for action in ("build", "verify"):
+        doc_command = documents_commands.add_parser(action)
+        doc_command.add_argument("--draft", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview", "fill"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview", "fill", "documents"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
