@@ -455,3 +455,22 @@ Les adaptateurs peuvent cibler un `input type=file` avec les déclarations
 aucune pièce jointe n'est sélectionnée. Le navigateur interdit toujours
 la soumission et n'ouvre qu'une page statique autorisée. Voir
 [docs/ATTACHMENTS.md](docs/ATTACHMENTS.md).
+
+## M7.5 — Transfert humain et suivi de confirmation (à tester)
+
+La première version de M7.5 ajoute un suivi manuel sans soumission du bot.
+Le navigateur Playwright M7.3 ferme sa session et les valeurs préremplies
+ne sont **pas** récupérées dans le navigateur habituel. Une intervention
+humaine peut donc nécessiter de remplir de nouveau les champs.
+
+```bash
+uv run ajh submission handoff --id IDENTIFIANT --policy .ajh/browser-policy.toml --open-browser
+uv run ajh submission clicked --id IDENTIFIANT
+uv run ajh submission confirm --id IDENTIFIANT --source confirmation_page --evidence .ajh/receipts/confirmation.png --reference REQ-123456 --reviewed
+uv run ajh submission status --id IDENTIFIANT
+```
+
+La confirmation n'est enregistrée qu'après déclaration du clic et examen
+humain d'un justificatif. Ce n'est pas une vérification indépendante du site.
+Le bot n'appuie jamais sur « Envoyer ». Voir
+[docs/HUMAN_SUBMISSION.md](docs/HUMAN_SUBMISSION.md).

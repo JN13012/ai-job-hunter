@@ -146,3 +146,12 @@ dans les champs de fichiers explicitement déclarés. Les empreintes PDF
 sont vérifiées à chaque réservation et avant le remplissage. Le réseau reste
 bloqué après le GET HTML initial ; aucune soumission n'est effectuée.
 Voir [ATTACHMENTS.md](ATTACHMENTS.md).
+
+## M7.5 — Première étape de suivi humain
+
+L'implémentation actuelle distingue transfert manuel, clic déclaré sans
+confirmation et réception attestée par l'utilisateur à l'aide d'une preuve
+locale. Elle ne dispose pas encore d'un navigateur conservant le formulaire
+prérempli jusqu'au clic de l'utilisateur : le contexte Playwright M7.3 se
+ferme volontairement avant la finalisation. Aucune preuve n'est automatiquement
+validée auprès de l'ATS. Voir [HUMAN_SUBMISSION.md](HUMAN_SUBMISSION.md).

@@ -252,3 +252,15 @@ chaque claim. `form_adapters.py` ajoute des correspondances d'upload
 explicites ; `form_filling.py` choisit seulement les PDF vérifiés,
 sans soumettre le formulaire. Les fichiers restent privés sous `.ajh`.
 Voir [ATTACHMENTS.md](ATTACHMENTS.md).
+
+## M7.5 — Suivi atomique du transfert humain
+
+`submission_tracking.py` crée deux tables additives, sans modification des
+contraintes de la file M7.1. `handoff` vérifie le dossier et la destination,
+consigne un état de suivi et empêche les workers d'ouvrir le même dossier.
+`clicked` ne vaut jamais confirmation. `confirm` exige une preuve locale
+revue par un humain et n'enregistre que sa signature SHA-256 et sa
+référence ; il ne contrôle pas la plateforme distante. La CLI peut ouvrir
+explicitement l'URL dans le navigateur habituel, mais ne transporte pas le
+formulaire rempli dans la session Playwright éphémère. Voir
+[HUMAN_SUBMISSION.md](HUMAN_SUBMISSION.md).

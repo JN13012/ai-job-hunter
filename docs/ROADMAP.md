@@ -15,7 +15,7 @@ en priorité, France et zones géographiques configurables.
 | M4 | Découverte légale via API Recherche d'Entreprises, SIREN et croisement LBA/catalogue — implémentation à valider |
 | M5 | M5.1 validé ; M5.2–M5.4 implémentés, tests M5.2–M5.4 à exécuter |
 | M6 | CV/lettres factuels, réponses déclarées, suggestions Ollama locales avec cache et budget — implémenté, à tester |
-| M7 | M7.1–M7.4 implémentés à tester (formulaires statiques et PDF contrôlés) ; M7.5–M7.6 à développer |
+| M7 | M7.1–M7.5 sur branches, non validés localement ; M7.5 transfert manuel + attestation, sans session Playwright persistante ; M7.6 à développer |
 | M8 | Suivi des candidatures confirmées, relances limitées et planification des recherches |
 | M9 | Tableau de bord local : file de candidatures, dossiers prêts, validation humaine et suivi |
 
@@ -148,3 +148,14 @@ M7.1 vérifie leur intégrité et bloque les modifications après inscription.
 Les adaptateurs M7.3 peuvent sélectionner uniquement les PDF explicitement
 autorisés dans les champs `input[type=file]`. JavaScript reste désactivé
 et aucune candidature n'est soumise. Voir [ATTACHMENTS.md](ATTACHMENTS.md).
+
+### M7.5 — Transfert humain et preuve locale
+
+`submission_tracking.py` bloque les reprises et candidatures en doublon dès
+le début d'un transfert, puis distingue `awaiting_manual_action`,
+`clicked_unconfirmed`, `submitted_confirmed` (preuve revue par l'humain) et
+`abandoned`. L'URL peut être ouverte par le navigateur habituel sur demande
+explicite. Contrairement à la cible initiale, **les champs préremplis dans
+la session Chromium isolée ne sont pas transmis au navigateur habituel** ;
+une véritable reprise du formulaire rempli reste à réaliser. Aucune action
+`submit` n'est exécutée par le programme. Voir [HUMAN_SUBMISSION.md](HUMAN_SUBMISSION.md).
