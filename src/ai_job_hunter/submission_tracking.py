@@ -8,6 +8,8 @@ A handoff opens only a URL in the user's own browser on explicit request.
 States are additive to the M7.1 queue, not a claim of native ATS integration.
 """
 
+from __future__ import annotations
+
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path

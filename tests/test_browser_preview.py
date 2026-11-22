@@ -69,13 +69,13 @@ class Route:
         self.fulfilled = True
 
 
-@pytest.mark.parametrize("request", [
+@pytest.mark.parametrize("test_request", [
     Request("https://jobs.example.org/apply", method="POST"),
     Request("https://evil.example.org/apply"),
     Request("https://jobs.example.org/apply", resource_type="script", navigation=False),
 ])
-def test_requests_blocked(request):
-    route = Route(request)
+def test_requests_blocked(test_request):
+    route = Route(test_request)
     guard = StrictDocumentRoute("https://jobs.example.org/apply")
     guard(route)
     assert route.aborted and not route.fulfilled
