@@ -166,7 +166,10 @@ class StrictDocumentRoute:
             route.fulfill(status=200, content_type="text/html; charset=utf-8", body=body)
         except Exception:
             self.denied = True
-            route.abort()
+            try:
+                route.abort()
+            except Exception:
+                pass
 
 
 def show_visible_page(

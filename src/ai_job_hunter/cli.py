@@ -28,6 +28,7 @@ from ai_job_hunter.candidate import load_candidate
 from ai_job_hunter.application_drafts import prepare_job
 from ai_job_hunter.ai_suggestions import TokenBudget, propose_rewrite
 from ai_job_hunter.application_queue import ApplicationQueue
+from ai_job_hunter.browser_preview import BrowserPolicy, preview_one, CleanupUncertain
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -67,6 +68,18 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "preview":
+            policy = BrowserPolicy.load(args.policy)
+            with JobStore(config.database_path) as store:
+                queue = ApplicationQueue(store, config.data_dir)
+                result = preview_one(
+                    queue, policy, max_seconds=args.max_seconds,
+                )
+                print(json.dumps({
+                    "status": result.status, "application_id": result.application_id,
+                    "reason": result.reason,
+                }, ensure_ascii=False))
+                return 0 if result.status in ("queued", "cancelled", "empty") else 1
         if args.command == "queue":
             with JobStore(config.database_path) as store:
                 queue = ApplicationQueue(store, config.data_dir)
@@ -433,10 +446,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     for operation in ("cancel", "recover", "resume"):
         cmd = queue_commands.add_parser(operation, help="transition explicite de la file")
         cmd.add_argument("--id", required=True)
+    preview_parser = commands.add_parser(
+        "preview", help="ouvrir une seule candidature autorisée en lecture seule avec Playwright"
+    )
+    preview_parser.add_argument("--policy", type=Path, required=True)
+    preview_parser.add_argument("--max-seconds", type=int, default=180)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
