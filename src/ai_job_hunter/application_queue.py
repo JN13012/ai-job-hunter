@@ -430,6 +430,14 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
+            tracking_exists = self.store.connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='submission_handoffs'"
+            ).fetchone() is not None
+            if tracking_exists and self.store.connection.execute(
+                "SELECT 1 FROM submission_handoffs WHERE application_id=?", (app_id,),
+            ).fetchone():
+                raise ValueError("Transfert humain commencé ; utiliser submission abandon ou status.")
             row = self._get(app_id)
             if row["status"] == "reserved":
                 if not row["cancel_requested"]:

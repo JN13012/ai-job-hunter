@@ -24,7 +24,6 @@ STATES = (
     "submitted_confirmed", "abandoned",
 )
 REF_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:/# -]{4,159}\Z")
-HEX = re.compile(r"[a-f0-9]{64}\Z")
 MAX_PROOF_BYTES = 5 * 1024 * 1024
 PROOF_SUFFIXES = frozenset((".png", ".jpg", ".jpeg", ".pdf", ".eml", ".txt"))
 
@@ -167,6 +166,8 @@ class SubmissionTracker:
         with self.conn:
             self.conn.execute("BEGIN IMMEDIATE")
             row = self._get(app_id)
+            if self.queue._get(app_id)["status"] != "queued":
+                raise ValueError("File non préparée : déclaration de clic refusée.")
             if row["status"] == "clicked_unconfirmed":
                 return self._public(row)
             if row["status"] != "awaiting_manual_action":
@@ -201,11 +202,19 @@ class SubmissionTracker:
             data = file.read(MAX_PROOF_BYTES + 1)
         if not 0 < len(data) <= MAX_PROOF_BYTES:
             raise ValueError("Taille de preuve interdite.")
+        if evidence.suffix.lower() == ".pdf" and not data.startswith(b"%PDF-"):
+            raise ValueError("Preuve PDF invalide.")
+        if evidence.suffix.lower() == ".png" and not data.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise ValueError("Preuve PNG invalide.")
+        if evidence.suffix.lower() in (".jpg", ".jpeg") and not data.startswith(b"\xff\xd8\xff"):
+            raise ValueError("Preuve JPEG invalide.")
         signature = sha256(data).hexdigest()
         current = _now(now)
         with self.conn:
             self.conn.execute("BEGIN IMMEDIATE")
             row = self._get(app_id)
+            if self.queue._get(app_id)["status"] != "queued":
+                raise ValueError("File non préparée : confirmation refusée.")
             if row["status"] == "submitted_confirmed":
                 if (row["evidence_source"] != evidence_source
                         or row["evidence_sha256"] != signature
@@ -258,9 +267,8 @@ class SubmissionTracker:
         if type(limit) is not int or not 1 <= limit <= 1000:
             raise ValueError("Limite de résultats invalide.")
         records = self.conn.execute(
-            "SELECT * FROM submission_handoffs ORDER BY created_at,id LIMIT ?".replace(
-                "created_at,id", "created_at,application_id"
-            ), (limit,),
+            "SELECT * FROM submission_handoffs ORDER BY created_at,application_id LIMIT ?",
+            (limit,),
         ).fetchall()
         return [self._public(record) for record in records]
 
