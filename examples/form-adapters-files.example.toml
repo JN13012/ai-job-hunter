@@ -1,0 +1,23 @@
+# Adaptateur fictif : ne pas copier vers un vrai site sans autorisation explicite.
+[[adapter]]
+id = "fixture_files"
+host = "jobs.example.org"
+path_prefix = "/apply"
+form_id = "application"
+permission_note = "Autorisation du formulaire de test explicitement documentée."
+
+[[adapter.field]]
+name = "candidate_name"
+tag = "input"
+source = "identity.full_name"
+required = true
+
+[[adapter.upload]]
+name = "resume"
+document = "cv"
+required = true
+
+[[adapter.upload]]
+name = "cover_letter"
+document = "letter"
+required = false
