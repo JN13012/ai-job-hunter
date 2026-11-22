@@ -18,7 +18,7 @@ from ai_job_hunter.storage import JobStore
 
 PROFILE = Profile({"ai": ("ai engineer",)}, ("python", "linux"), ("marseille",),
                   (), (), (), 60)
-PROFILE_TEXT = "[roles]\nai=['ai engineer']\nskills=['python','linux']\npreferred_locations=['marseille']\n"
+PROFILE_TEXT = "skills=['python','linux']\npreferred_locations=['marseille']\n[roles]\nai=['ai engineer']\n"
 CANDIDATE_TEXT = """
 [identity]
 full_name = "Test Candidate"

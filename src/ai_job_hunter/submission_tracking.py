@@ -188,7 +188,7 @@ class SubmissionTracker:
     ) -> dict:
         """Human-reviewed receipt, NOT independent verification by the ATS."""
         if reviewed is not True:
-            raise ValueError("Lecture humaine de la preuve exigée.")
+            raise ValueError("Revue humaine de la preuve exigée.")
         if evidence_source not in SOURCE_TYPES:
             raise ValueError("Type de confirmation non pris en charge.")
         if (not isinstance(reference, str)

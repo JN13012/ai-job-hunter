@@ -166,6 +166,7 @@ def test_cli_routes_offline(tmp_path, monkeypatch, capsys):
     assert main(["routes", "companies"]) == 0
     assert capsys.readouterr().out == ""
     assert main(["routes", "jobs", "--profile", "examples/nonexistent.toml"]) == 1
+    assert "[FAIL]" in capsys.readouterr().out
     profile = tmp_path / "profile.toml"
     profile.write_text("[roles]\nai=['ai engineer']\n")
     assert main(["routes", "jobs", "--profile", str(profile)]) == 0

@@ -109,6 +109,7 @@ def fill_known_fields(
         control = form.locator(binding.selector)
         if control.count() != 1:
             raise FormMismatch("Sélecteur de champ absent ou ambigu.")
+        control = control.nth(0)
         if not control.is_visible() or not control.is_enabled():
             raise FormMismatch("Champ masqué ou désactivé.")
         if binding.tag == "input":
@@ -128,8 +129,11 @@ def fill_known_fields(
     file_operations = []
     for attachment in adapter.uploads:
         control = form.locator(attachment.selector)
-        if control.count() != 1 or not control.is_enabled():
-            raise FormMismatch("Champ de pièce jointe absent ou désactivé.")
+        if control.count() != 1:
+            raise FormMismatch("Champ de pièce jointe absent ou ambigu.")
+        control = control.nth(0)
+        if not control.is_enabled():
+            raise FormMismatch("Champ de pièce jointe désactivé.")
         if control.get_attribute("multiple") is not None:
             raise FormMismatch("Téléversement multiple interdit.")
         accept = (control.get_attribute("accept") or "").strip().casefold()
