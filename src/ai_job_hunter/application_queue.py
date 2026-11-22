@@ -314,7 +314,12 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
-            query = "SELECT * FROM application_queue WHERE status='queued' "
+            query = (
+                "SELECT * FROM application_queue WHERE status='queued' "
+                "AND id NOT IN (SELECT application_id FROM submission_handoffs "
+                "WHERE status IN ('awaiting_manual_action','clicked_unconfirmed',"
+                "'submitted_confirmed','abandoned')) "
+            )
             if browser_only:
                 query += "AND channel_kind IN ('offer_link','company_form') "
             rows = self.store.connection.execute(
@@ -460,6 +465,10 @@ class ApplicationQueue:
         current = _now(now)
         with self.store.connection:
             self.store.connection.execute("BEGIN IMMEDIATE")
+            if self.store.connection.execute(
+                "SELECT 1 FROM submission_handoffs WHERE application_id=?", (app_id,),
+            ).fetchone():
+                raise ValueError("Transfert humain déjà commencé : reprise automatique interdite.")
             row = self._get(app_id)
             if row["status"] not in ("interrupted", "failed", "blocked", "cancelled"):
                 raise ValueError("Candidature non reprenable.")
