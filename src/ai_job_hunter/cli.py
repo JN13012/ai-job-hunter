@@ -9,6 +9,7 @@ import os
 import tempfile
 import json
 import sqlite3
+import webbrowser
 
 import httpx
 
@@ -78,6 +79,10 @@ def _run_jobs_command(args: argparse.Namespace) -> int:
                 cmd = args.submission_command
                 if cmd == "handoff":
                     result = tracker.handoff(args.id, BrowserPolicy.load(args.policy))
+                    if args.open_browser:
+                        # Explicit invocation opens an approved URL in the user's
+                        # browser. The form is NOT prefilled or submitted here.
+                        result["browser_opened"] = bool(webbrowser.open(result["manual_url"]))
                 elif cmd == "clicked":
                     result = tracker.clicked(args.id)
                 elif cmd == "confirm":
@@ -551,6 +556,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     handoff = submission_commands.add_parser("handoff", help="récupérer l'URL pour action manuelle")
     handoff.add_argument("--id", required=True)
     handoff.add_argument("--policy", type=Path, required=True)
+    handoff.add_argument("--open-browser", action="store_true",
+                         help="ouvrir l'URL dans le navigateur habituel, sans clic automatisé")
     clicked = submission_commands.add_parser("clicked", help="déclarer un clic humain (non confirmé)")
     clicked.add_argument("--id", required=True)
     confirm = submission_commands.add_parser("confirm", help="enregistrer une preuve revue humainement")

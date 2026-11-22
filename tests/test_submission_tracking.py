@@ -85,7 +85,7 @@ def test_clicked_not_equal_confirmed(setup):
     assert tracker.clicked(app_id, now=NOW)["status"] == "clicked_unconfirmed"
     assert queue.claim("worker", now=NOW) is None
     assert tracker.stats()["states"]["submitted_confirmed"] == 0
-    with pytest.raises(ValueError, match="hors état"):
+    with pytest.raises(ValueError, match="après déclaration de clic"):
         tracker.abandon(app_id, now=NOW)
 
 
@@ -93,10 +93,10 @@ def test_confirmation_requires_source_and_review(setup, tmp_path):
     _, queue, tracker, app_id, policy, _ = setup
     evidence = tmp_path / "confirmation.txt"
     evidence.write_text("Your application has been submitted. Confirmation ID REQ-234.")
+    tracker.handoff(app_id, policy, now=NOW)
     with pytest.raises(ValueError, match="clic humain"):
         tracker.confirm(app_id, evidence=evidence, evidence_source="confirmation_page",
                         reference="REQ-234", reviewed=True, now=NOW)
-    tracker.handoff(app_id, policy, now=NOW)
     tracker.clicked(app_id, now=NOW)
     with pytest.raises(ValueError, match="revue"):
         tracker.confirm(app_id, evidence=evidence, evidence_source="confirmation_page",
