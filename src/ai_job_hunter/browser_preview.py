@@ -11,7 +11,7 @@ import ipaddress
 import re
 import time
 import tomllib
-from typing import Callable
+from typing import Any, Callable
 from urllib.parse import unquote, urlsplit
 
 from ai_job_hunter.application_queue import ApplicationQueue
@@ -175,6 +175,7 @@ class StrictDocumentRoute:
 def show_visible_page(
     target: str, should_stop: Callable[[], bool], *,
     max_seconds: int = 180,
+    after_load: Callable[[Any], None] | None = None,
 ) -> str:
     """Run one real headed Chromium context, verified closure before return."""
     try:
@@ -206,6 +207,12 @@ def show_visible_page(
                 raise
             if guard.denied or not guard.accepted:
                 raise NavigationDenied("Réponse HTML non conforme.")
+            # M7.3: only a trusted, deterministic callback can inspect/fill
+            # fields; the network guard and JS-off context remain active.
+            if after_load is not None:
+                after_load(page)
+                if guard.denied or page.is_closed():
+                    raise NavigationDenied("Navigation ou fermeture pendant le remplissage.")
             deadline = time.monotonic() + max_seconds
             while time.monotonic() < deadline and not page.is_closed():
                 if should_stop():
