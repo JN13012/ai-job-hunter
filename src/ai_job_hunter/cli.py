@@ -29,6 +29,8 @@ from ai_job_hunter.application_drafts import prepare_job
 from ai_job_hunter.ai_suggestions import TokenBudget, propose_rewrite
 from ai_job_hunter.application_queue import ApplicationQueue
 from ai_job_hunter.browser_preview import BrowserPolicy, preview_one, CleanupUncertain
+from ai_job_hunter.form_adapters import AdapterCatalog
+from ai_job_hunter.form_filling import fill_one
 
 
 def _doctor(config_path: Path | None) -> int:
@@ -68,6 +70,20 @@ def _positive_limit(value: str) -> int:
 def _run_jobs_command(args: argparse.Namespace) -> int:
     try:
         config = load_config(args.config)
+        if args.command == "fill":
+            policy = BrowserPolicy.load(args.policy)
+            adapters = AdapterCatalog.load(args.adapters)
+            candidate = load_candidate(args.candidate)
+            with JobStore(config.database_path) as store:
+                queue = ApplicationQueue(store, config.data_dir)
+                result = fill_one(
+                    queue, policy, adapters, candidate, max_seconds=args.max_seconds,
+                )
+                print(json.dumps({
+                    "status": result.status, "application_id": result.application_id,
+                    "filled_fields": result.filled_fields, "reason": result.reason,
+                }, ensure_ascii=False))
+                return 0 if result.status in ("queued", "cancelled", "empty") else 1
         if args.command == "preview":
             policy = BrowserPolicy.load(args.policy)
             with JobStore(config.database_path) as store:
@@ -451,10 +467,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     preview_parser.add_argument("--policy", type=Path, required=True)
     preview_parser.add_argument("--max-seconds", type=int, default=180)
+    fill_parser = commands.add_parser(
+        "fill", help="remplir des champs explicitement déclarés, sans soumettre"
+    )
+    fill_parser.add_argument("--policy", type=Path, required=True)
+    fill_parser.add_argument("--adapters", type=Path, required=True)
+    fill_parser.add_argument("--candidate", type=Path, required=True)
+    fill_parser.add_argument("--max-seconds", type=int, default=120)
     args = parser.parse_args(argv)
     if args.command == "doctor":
         return _doctor(args.config)
-    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview"}:
+    if args.command in {"collect", "jobs", "recruiters", "catalog", "import", "match", "companies", "contacts", "routes", "prepare", "rewrite", "queue", "preview", "fill"}:
         return _run_jobs_command(args)
     parser.print_help()
     return 0
