@@ -84,6 +84,11 @@ def ensure_schema(store: JobStore) -> None:
         )
 
 
+def _read_regular_attachment(path: Path) -> bytes:
+    from ai_job_hunter.attachment_documents import MAX_PDF_BYTES, _read_regular
+    return _read_regular(path, MAX_PDF_BYTES)
+
+
 class ApplicationQueue:
     def __init__(self, store: JobStore, data_dir: Path):
         self.store = store
@@ -115,6 +120,14 @@ class ApplicationQueue:
             fingerprint.update(filename.encode("utf-8") + b"\0" + raw + b"\0")
             if filename == "manifest.json":
                 manifest_data = raw
+        # M7.4: optional attachments become part of the immutable queue hash.
+        # Old M6 dossiers remain valid without a bundle.
+        from ai_job_hunter.attachment_documents import read_bundle
+        attachments = read_bundle(folder)
+        if attachments:
+            for filename in ("attachments.json", "cv.pdf", "letter.pdf"):
+                extra = _read_regular_attachment(folder / filename)
+                fingerprint.update(filename.encode("utf-8") + b"\0" + extra + b"\0")
         if manifest_data is None:
             raise ValueError("Manifeste M6 absent.")
         try:
